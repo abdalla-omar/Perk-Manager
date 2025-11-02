@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>User Management SPA</title>
+        <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+        <script src="spa.js"></script>
+    </head>
+    <body>
+        <h1>Perk Manager</h1>
+
+        <!-- Login Form -->
+        <h2>Login</h2>
+        <form id="loginForm" autocomplete="off">
+
+            <label for="loginEmail">Email:</label>
+            <input type="email" id="loginEmail" name="loginEmail" autocomplete="off" required><br>
+
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" name="loginPassword" autocomplete="new-password" required><br>
+
+            <button type="submit">Login</button>
+        </form>
+
+
+
+        <h2>Existing Users</h2>
+        <ul id="userList"></ul>
+
+        <h2>Your Perks</h2>
+        <ul id="userPerks"></ul>
+
+        <!-- Create User Form -->
+        <h2>Create New User</h2>
+        <form id="createUserForm" autocomplete="off">
+            <label for="userEmail">Email:</label>
+            <input type="email" id="userEmail" autocomplete="off" required><br>
+
+            <label for="userPassword">Password:</label>
+            <input type="password" id="userPassword" autocomplete="new-password" required><br>
+
+            <button type="submit">Add User</button>
+        </form>
+
+        <!-- Add New Perk Form -->
+        <h2>Add New Perk</h2>
+        <form id="createPerkForm" autocomplete="off">
+            <label for="perkDescription">Description:</label>
+            <input type="text" id="perkDescription" autocomplete="off" required><br>
+
+            <label for="perkMembership">Membership:</label>
+            <select id="perkMembership" required>
+                <option value="">-- Select Membership --</option>
+                <option value="CAA">CAA</option>
+                <option value="VISA">VISA</option>
+                <option value="MASTERCARD">MASTERCARD</option>
+                <option value="AMEX">AMEX</option>
+                <option value="AIRMILES">AIRMILES</option>
+            </select><br>
+
+            <label for="perkProduct">Product:</label>
+            <select id="perkProduct" required>
+                <option value="">-- Select Product --</option>
+                <option value="MOVIES">Movies</option>
+                <option value="HOTELS">Hotels</option>
+                <option value="FLIGHTS">Flights</option>
+                <option value="CARS">Cars</option>
+                <option value="DINING">Dining</option>
+            </select><br>
+
+            <label for="perkStartDate">Start Date:</label>
+            <input type="date" id="perkStartDate" required><br>
+
+            <label for="perkEndDate">End Date:</label>
+            <input type="date" id="perkEndDate" required><br>
+
+            <button type="submit">Add Perk</button>
+        </form>
+
+    </body>
+</html>
