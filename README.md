@@ -39,3 +39,9 @@ To build the project:
 ```bash
 ./mvnw clean package
 ```
+
+
+## Schema
+[schema](./docs/schema.md)
+
+[Diagram](./docs/schema.mmd)
