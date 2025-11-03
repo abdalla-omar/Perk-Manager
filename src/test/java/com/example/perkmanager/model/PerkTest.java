@@ -2,6 +2,9 @@ package com.example.perkmanager.model;
 
 import com.example.perkmanager.enumerations.MembershipType;
 import com.example.perkmanager.enumerations.ProductType;
+import com.example.perkmanager.model.AppUser;
+import com.example.perkmanager.model.Perk;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -22,14 +25,14 @@ class PerkTest {
                 user
         );
 
-        assertEquals("Test Description", perk.getDescription());
-        assertEquals(MembershipType.VISA, perk.getMembership());
-        assertEquals(ProductType.HOTELS, perk.getProduct());
-        assertEquals(LocalDate.of(2023, 1, 1), perk.getStartDate());
-        assertEquals(LocalDate.of(2023, 12, 31), perk.getEndDate());
-        assertEquals(user, perk.getPostedBy());
-        assertEquals(0, perk.getUpvotes());
-        assertEquals(0, perk.getDownvotes());
+        Assertions.assertEquals("Test Description", perk.getDescription());
+        Assertions.assertEquals(MembershipType.VISA, perk.getMembership());
+        Assertions.assertEquals(ProductType.HOTELS, perk.getProduct());
+        Assertions.assertEquals(LocalDate.of(2023, 1, 1), perk.getStartDate());
+        Assertions.assertEquals(LocalDate.of(2023, 12, 31), perk.getEndDate());
+        Assertions.assertEquals(user, perk.getPostedBy());
+        Assertions.assertEquals(0, perk.getUpvotes());
+        Assertions.assertEquals(0, perk.getDownvotes());
     }
 
     @Test
@@ -47,8 +50,8 @@ class PerkTest {
         perk.upvote();
         perk.downvote();
 
-        assertEquals(2, perk.getUpvotes());
-        assertEquals(1, perk.getDownvotes());
+        Assertions.assertEquals(2, perk.getUpvotes());
+        Assertions.assertEquals(1, perk.getDownvotes());
     }
 
     @Test
@@ -66,8 +69,8 @@ class PerkTest {
         perk.setMembership(MembershipType.AIRMILES);
         perk.setProduct(ProductType.DINING);
 
-        assertEquals("Updated Description", perk.getDescription());
-        assertEquals(MembershipType.AIRMILES, perk.getMembership());
-        assertEquals(ProductType.DINING, perk.getProduct());
+        Assertions.assertEquals("Updated Description", perk.getDescription());
+        Assertions.assertEquals(MembershipType.AIRMILES, perk.getMembership());
+        Assertions.assertEquals(ProductType.DINING, perk.getProduct());
     }
 }
