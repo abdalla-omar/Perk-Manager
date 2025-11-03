@@ -2,6 +2,8 @@
 
 A Spring Boot application for managing perks and memberships.
 
+https://perk-manager.azurewebsites.net/
+
 ### Team (Group 3)
 - Ohiorenua Ajayi-Isuku
 - Ethan Ashworth
