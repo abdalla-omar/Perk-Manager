@@ -2,6 +2,19 @@
 
 A Spring Boot application for managing perks and memberships.
 
+### Team (Group 3)
+- Ohiorenua Ajayi-Isuku
+- Ethan Ashworth
+- Abdallah Omar
+- Mithushan Ravichandramohan
+- Quentin Weir
+
+### Core Features
+- Profiles with memberships/cards
+- Post perks tied to a membership + product
+- Voting (surface useful, bury incorrect)
+- Search & sort (votes or expiry)
+
 ## Requirements
 
 - **Java 21** or higher
