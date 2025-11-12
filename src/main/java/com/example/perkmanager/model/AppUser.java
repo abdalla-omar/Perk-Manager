@@ -13,7 +13,6 @@ public class AppUser {
 
     //one-to-one relationship with Profile
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "profile_id") //foreign key in AppUser table
     private Profile profile;
 
     protected AppUser() {} // JPA requires this

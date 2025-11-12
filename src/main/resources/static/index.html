@@ -4,7 +4,9 @@
         <meta charset="UTF-8">
         <title>User Management SPA</title>
         <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-        <script src="spa.js"></script>
+        <script src="api.js"></script>
+        <script src="ui.js"></script>
+        <script src="main.js"></script>
     </head>
     <body>
         <h1>Perk Manager</h1>
@@ -21,8 +23,6 @@
 
             <button type="submit">Login</button>
         </form>
-
-
 
         <h2>Existing Users</h2>
         <ul id="userList"></ul>
@@ -51,11 +51,6 @@
             <label for="perkMembership">Membership:</label>
             <select id="perkMembership" required>
                 <option value="">-- Select Membership --</option>
-                <option value="CAA">CAA</option>
-                <option value="VISA">VISA</option>
-                <option value="MASTERCARD">MASTERCARD</option>
-                <option value="AMEX">AMEX</option>
-                <option value="AIRMILES">AIRMILES</option>
             </select><br>
 
             <label for="perkProduct">Product:</label>
@@ -76,6 +71,24 @@
 
             <button type="submit">Add Perk</button>
         </form>
+
+        <h2>Add Membership to Profile</h2>
+        <form id="addMembershipForm" autocomplete="off">
+            <label for="membershipSelect">Membership:</label>
+            <select id="membershipSelect" required>
+                <option value="">-- Select Membership --</option>
+                <option value="CAA">CAA</option>
+                <option value="VISA">VISA</option>
+                <option value="MASTERCARD">MASTERCARD</option>
+                <option value="AMEX">AMEX</option>
+                <option value="AIRMILES">AIRMILES</option>
+            </select><br>
+
+            <button type="submit">Add Membership</button>
+        </form>
+
+        <h2>Your Profile</h2>
+        <ul id="userProfile"></ul>
 
     </body>
 </html>

@@ -6,23 +6,34 @@ import java.util.Set;
 
 @Entity
 public class Profile {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //list of memberships: Air Miles, CAA, Visa, etc.
+    // List of memberships: Air Miles, CAA, Visa, etc.
     @ElementCollection
     private Set<String> memberships = new HashSet<>();
 
-    protected Profile() {} // JPA requires this
+    public Profile() {}
 
-    public boolean hasMembership(String membership) { return memberships.contains(membership); }
+    public boolean hasMembership(String membership) {
+        return memberships.contains(membership);
+    }
 
-    public void addMembership(String membership) { memberships.add(membership); }
+    public void addMembership(String membership) {
+        memberships.add(membership);
+    }
 
-    public void removeMembership(String membership) { memberships.remove(membership); }
+    public void removeMembership(String membership) {
+        memberships.remove(membership);
+    }
 
-    public Long getId() { return id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Set<String> getMemberships() { return memberships; }
+    public Set<String> getMemberships() {
+        return memberships;
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.perkmanager;
 
+import com.example.perkmanager.model.AppUser;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
