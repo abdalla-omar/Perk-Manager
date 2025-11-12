@@ -15,7 +15,7 @@ public class AppUser {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private Profile profile;
 
-    protected AppUser() {} // JPA requires this
+    public AppUser() {} // JPA requires this
 
     public AppUser(String email, String password) {
         this.email = email;
