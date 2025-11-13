@@ -3,6 +3,7 @@ package com.example.perkmanager.controller;
 import com.example.perkmanager.model.AppUser;
 import com.example.perkmanager.model.Perk;
 import com.example.perkmanager.repository.PerkRepository;
+import com.example.perkmanager.repository.ProfileRepository;
 import com.example.perkmanager.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,10 @@ class AppControllerTest {
 
     @MockBean
     private PerkRepository perkRepo;
+
+    @MockBean
+    private ProfileRepository profileRepo;
+
 
     private AppUser testUser;
     private Perk testPerk;
