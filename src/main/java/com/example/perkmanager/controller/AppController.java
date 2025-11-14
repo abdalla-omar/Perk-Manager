@@ -66,7 +66,13 @@ public class AppController {
     // Perks
     // ---------------------------------------------------------------------
 
-    // GET /api/perkmanager/{userId}/perks
+    // 🔹 NEW: GET /api/perkmanager/perks  -> all perks (any user)
+    @GetMapping("/perks")
+    public List<Perk> getAllPerks() {
+        return (List<Perk>) perkRepo.findAll();
+    }
+
+    // GET /api/perkmanager/{userId}/perks  -> perks for a specific user
     @GetMapping("/{userId}/perks")
     public ResponseEntity<List<Perk>> getUserPerks(@PathVariable Long userId) {
         Optional<AppUser> maybeUser = userRepo.findById(userId);
@@ -78,7 +84,7 @@ public class AppController {
         return ResponseEntity.ok(perks);
     }
 
-    // POST /api/perkmanager/{userId}/perks
+    // POST /api/perkmanager/{userId}/perks  -> create perk for a user
     @PostMapping("/{userId}/perks")
     public ResponseEntity<Perk> createPerk(@PathVariable Long userId,
                                            @RequestBody Perk perk) {
@@ -96,8 +102,7 @@ public class AppController {
 
         Perk saved = perkRepo.save(perk);
 
-        // 🔴 before: return ResponseEntity.status(HttpStatus.CREATED).body(saved);
-        // ✅ tests expect 200 OK, so:
+        // Match tests: return 200 OK
         return ResponseEntity.ok(saved);
     }
 

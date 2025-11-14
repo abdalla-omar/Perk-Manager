@@ -22,6 +22,14 @@ const api = {
         dataType: 'json'
     }),
 
+    // 🔹 NEW: get all perks (not just current user's)
+    getAllPerks: () => $.ajax({
+        url: '/api/perkmanager/perks',
+        method: 'GET',
+        dataType: 'json'
+    }),
+
+    // Perks for a specific user
     getUserPerks: (id) => $.ajax({
         url: `/api/perkmanager/${id}/perks`,
         method: 'GET',
@@ -50,7 +58,7 @@ const api = {
         dataType: 'json'
     }),
 
-    // ✅ NEW — upvote a perk
+    // Upvote a perk
     upvotePerk: (perkId) => $.ajax({
         url: `/api/perkmanager/perks/${perkId}/upvote`,
         method: 'POST',

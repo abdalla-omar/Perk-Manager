@@ -4,6 +4,7 @@ $(function() {
 
     // Initial load
     api.getUsers().then(ui.renderUsers);
+    api.getAllPerks().then(ui.renderAllPerks);   // 🔹 load all perks on page load
 
     // Create user
     $('#createUserForm').submit(function(e) {
@@ -61,7 +62,9 @@ $(function() {
 
         api.createPerk(currentUser.id, perk).then(() => {
             this.reset();
+            // refresh both your perks and the global list
             api.getUserPerks(currentUser.id).then(ui.renderPerks);
+            api.getAllPerks().then(ui.renderAllPerks);
         });
     });
 
