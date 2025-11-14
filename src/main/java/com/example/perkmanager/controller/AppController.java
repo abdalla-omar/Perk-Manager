@@ -1,18 +1,15 @@
 package com.example.perkmanager.controller;
-
-import com.example.perkmanager.model.Profile;
+import com.example.perkmanager.model.Perk;
 import com.example.perkmanager.repository.PerkRepository;
-import com.example.perkmanager.repository.ProfileRepository;
+import org.springframework.http.ResponseEntity;
 import com.example.perkmanager.repository.UserRepository;
 import com.example.perkmanager.model.AppUser;
-import com.example.perkmanager.model.Perk;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/perkmanager")
@@ -22,8 +19,6 @@ public class AppController {
     private PerkRepository perkRepo;
     @Autowired
     private UserRepository userRepo;
-    @Autowired
-    ProfileRepository profileRepo;
 
     @GetMapping()
     public List<AppUser> getAll() {
@@ -62,50 +57,15 @@ public class AppController {
         return perkRepo.save(perk);
     }
 
-    @PostMapping("/{userId}/profile")
-    public Set<String> addMembershipToProfile(
-            @PathVariable Long userId,
-            @RequestBody Map<String, String> requestBody
-    ) {
-        String membership = requestBody.get("membership");
-
-        AppUser user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Ensure profile exists
-        Profile profile = user.getProfile();
-        if (profile == null) {
-            profile = new Profile();
-            //profile.setUser(user);
-            user.setProfile(profile);
-        }
-
-        // Add membership if valid and not already present
-        if (membership != null && !membership.isEmpty() && !profile.hasMembership(membership)) {
-            profile.addMembership(membership);
-        }
-
-        // Persist the user and its profile (CascadeType.ALL ensures profile is saved)
-        userRepo.save(user);
-
-        // Return updated memberships
-        return profile.getMemberships();
+    @PostMapping("/perks/{perkId}/upvote")
+    public ResponseEntity<Perk> upvotePerk(@PathVariable Long perkId) {
+        return perkRepo.findById(perkId)
+                .map(perk -> {
+                    perk.upvote();
+                    perkRepo.save(perk);
+                    return ResponseEntity.ok(perk);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // Get all memberships for a user
-    @GetMapping("/{userId}/profile")
-    public Set<String> getUserMemberships(@PathVariable Long userId) {
-        AppUser user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Profile profile = user.getProfile();
-        if (profile == null) {
-            profile = new Profile();
-            //profile.setUser(user);
-            user.setProfile(profile);
-            userRepo.save(user); // saves the new profile
-        }
-
-        return profile.getMemberships();
-    }
 }
