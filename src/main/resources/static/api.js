@@ -1,4 +1,3 @@
-
 // Defines functions to communicate with the backend via AJAX requests
 const api = {
     getUsers: () => $.ajax({
@@ -23,6 +22,14 @@ const api = {
         dataType: 'json'
     }),
 
+    // 🔹 NEW: get all perks (not just current user's)
+    getAllPerks: () => $.ajax({
+        url: '/api/perkmanager/perks',
+        method: 'GET',
+        dataType: 'json'
+    }),
+
+    // Perks for a specific user
     getUserPerks: (id) => $.ajax({
         url: `/api/perkmanager/${id}/perks`,
         method: 'GET',
@@ -48,6 +55,13 @@ const api = {
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({ membership }),
+        dataType: 'json'
+    }),
+
+    // Upvote a perk
+    upvotePerk: (perkId) => $.ajax({
+        url: `/api/perkmanager/perks/${perkId}/upvote`,
+        method: 'POST',
         dataType: 'json'
     })
 };
