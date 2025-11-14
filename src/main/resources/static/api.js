@@ -50,7 +50,7 @@ const api = {
         dataType: 'json'
     }),
 
-    // 🔹 NEW: upvote a perk
+    // ✅ NEW — upvote a perk
     upvotePerk: (perkId) => $.ajax({
         url: `/api/perkmanager/perks/${perkId}/upvote`,
         method: 'POST',
