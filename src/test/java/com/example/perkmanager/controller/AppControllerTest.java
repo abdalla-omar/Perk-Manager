@@ -71,7 +71,7 @@ class AppControllerTest {
         mockMvc.perform(post("/api/perkmanager")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"test@example.com\",\"password\":\"password\"}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("test@example.com"));
     }
 
