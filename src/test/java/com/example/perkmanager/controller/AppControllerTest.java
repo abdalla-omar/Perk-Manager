@@ -16,6 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
 
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,12 +44,14 @@ class AppControllerTest {
     @MockBean
     private ProfileRepository profileRepo;
 
+
     private AppUser testUser;
     private Perk testPerk;
 
     @BeforeEach
     void setUp() {
         testUser = new AppUser("test@example.com", "password");
+        testUser = new AppUser("test@example.com", "password"); // Initialize testUser
         testPerk = new Perk(
                 "Test Perk",
                 null, // MembershipType
@@ -58,6 +64,7 @@ class AppControllerTest {
 
     @Test
     void testGetAllUsers() throws Exception {
+    void testGetAll() throws Exception {
         when(userRepo.findAll()).thenReturn(Collections.singletonList(testUser));
 
         mockMvc.perform(get("/api/perkmanager"))
@@ -67,6 +74,7 @@ class AppControllerTest {
 
     @Test
     void testCreateUser() throws Exception {
+    void testCreate() throws Exception {
         when(userRepo.save(any(AppUser.class))).thenReturn(testUser);
 
         mockMvc.perform(post("/api/perkmanager")
@@ -79,6 +87,11 @@ class AppControllerTest {
     @Test
     void testGetUserPerks() throws Exception {
         when(userRepo.findById(1L)).thenReturn(Optional.of(testUser)); // Ensure Optional.of(testUser)
+        Mockito.doAnswer(invocation -> {
+            Long userId = invocation.getArgument(0);
+            return userId.equals(1L) ? Optional.of(testUser) : Optional.empty();
+        }).when(userRepo).findById(any(Long.class));
+
         when(perkRepo.findByPostedBy(testUser)).thenReturn(Collections.singletonList(testPerk));
 
         mockMvc.perform(get("/api/perkmanager/1/perks"))
@@ -88,6 +101,7 @@ class AppControllerTest {
 
     @Test
     void testLoginUser() throws Exception {
+    void testLogin() throws Exception {
         when(userRepo.findByEmail("test@example.com")).thenReturn(testUser);
 
         mockMvc.perform(post("/api/perkmanager/login")
@@ -100,6 +114,12 @@ class AppControllerTest {
     @Test
     void testCreatePerkForUser() throws Exception {
         when(userRepo.findById(1L)).thenReturn(Optional.ofNullable(testUser));
+    void testCreatePerk() throws Exception {
+        Mockito.doAnswer(invocation -> {
+            Long userId = invocation.getArgument(0);
+            return userId.equals(1L) ? Optional.of(testUser) : Optional.empty();
+        }).when(userRepo).findById(any(Long.class));
+
         when(perkRepo.save(any(Perk.class))).thenReturn(testPerk);
 
         mockMvc.perform(post("/api/perkmanager/1/perks")
