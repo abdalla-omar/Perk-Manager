@@ -1,18 +1,15 @@
+
 // Handles user interactions, form submissions, and updates the UI dynamically
 $(function() {
     let currentUser = null;
 
     // Initial load
     api.getUsers().then(ui.renderUsers);
-    api.getAllPerks().then(ui.renderAllPerks);   // 🔹 load all perks on page load
 
     // Create user
     $('#createUserForm').submit(function(e) {
         e.preventDefault();
-        const data = {
-            email: $('#userEmail').val().trim(),
-            password: $('#userPassword').val().trim()
-        };
+        const data = { email: $('#userEmail').val().trim(), password: $('#userPassword').val().trim() };
         api.createUser(data).then(user => {
             currentUser = user;
             this.reset();
@@ -28,23 +25,19 @@ $(function() {
     // Login
     $('#loginForm').submit(function(e) {
         e.preventDefault();
-        const creds = {
-            email: $('#loginEmail').val().trim(),
-            password: $('#loginPassword').val().trim()
-        };
+        const creds = { email: $('#loginEmail').val().trim(), password: $('#loginPassword').val().trim() };
 
-        api.login(creds)
-            .then(user => {
-                currentUser = user;
-                alert(`Logged in as ${user.email}`);
-                api.getUserPerks(user.id).then(ui.renderPerks);
-                api.getProfile(user.id).then(m => {
-                    ui.renderProfile(m);
-                    ui.updateMembershipOptions(m);
-                });
-            })
-            .catch(xhr => alert('Login failed: ' + xhr.responseText))
-            .always(() => this.reset());
+        api.login(creds).then(user => {
+            currentUser = user;
+            alert(`Logged in as ${user.email}`);
+            api.getUserPerks(currentUser.id).then(ui.renderPerks);
+            api.getProfile(currentUser.id).then(m => {
+                ui.renderProfile(m);
+                ui.updateMembershipOptions(m);
+            });
+        })
+        .catch(xhr => alert('Login failed: ' + xhr.responseText))
+        .always(() => this.reset());
     });
 
     // Create perk
@@ -62,9 +55,7 @@ $(function() {
 
         api.createPerk(currentUser.id, perk).then(() => {
             this.reset();
-            // refresh both your perks and the global list
             api.getUserPerks(currentUser.id).then(ui.renderPerks);
-            api.getAllPerks().then(ui.renderAllPerks);
         });
     });
 
