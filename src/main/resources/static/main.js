@@ -2,55 +2,99 @@
 $(function() {
     let currentUser = null;
 
+    function getAuthFields() {
+        return {
+            email: $('#authEmail').val().trim(),
+            password: $('#authPassword').val().trim()
+        };
+    }
+
+    function clearAuthFields() {
+        $('#authEmail').val('');
+        $('#authPassword').val('');
+    }
+
+    function refreshUserData() {
+        if (!currentUser) return;
+
+        api.getUserPerks(currentUser.id).then(ui.renderPerks);
+        api.getProfile(currentUser.id).then(m => {
+            ui.renderProfile(m);
+            ui.updateMembershipOptions(m);
+        });
+    }
+
+    function setCurrentUser(user) {
+        currentUser = user;
+
+        // update UI visibility + email
+        ui.setAuthUI(!!user);
+        ui.setCurrentUserEmail(user ? user.email : null);
+
+        if (user) {
+            refreshUserData();
+        } else {
+            // clear user-specific sections
+            $('#userProfile').empty();
+            $('#userPerks').empty();
+        }
+    }
+
+
     // Initial load
     api.getUsers().then(ui.renderUsers);
     api.getAllPerks().then(ui.renderAllPerks);   // 🔹 load all perks on page load
+    ui.setAuthUI(false); // ensure appSection is hidden, login/signup visible
 
-    // Create user
-    $('#createUserForm').submit(function(e) {
-        e.preventDefault();
-        const data = {
-            email: $('#userEmail').val().trim(),
-            password: $('#userPassword').val().trim()
-        };
-        api.createUser(data).then(user => {
-            currentUser = user;
-            this.reset();
-            api.getUsers().then(ui.renderUsers);
-            api.getUserPerks(currentUser.id).then(ui.renderPerks);
-            api.getProfile(currentUser.id).then(m => {
-                ui.renderProfile(m);
-                ui.updateMembershipOptions(m);
-            });
-        });
-    });
+    // Login using shared fields
+    $('#loginButton').click(function () {
+        const creds = getAuthFields();
 
-    // Login
-    $('#loginForm').submit(function(e) {
-        e.preventDefault();
-        const creds = {
-            email: $('#loginEmail').val().trim(),
-            password: $('#loginPassword').val().trim()
-        };
+        if (!creds.email || !creds.password) {
+            alert("Enter email and password to log in.");
+            return;
+        }
 
         api.login(creds)
             .then(user => {
-                currentUser = user;
                 alert(`Logged in as ${user.email}`);
-                api.getUserPerks(user.id).then(ui.renderPerks);
-                api.getProfile(user.id).then(m => {
-                    ui.renderProfile(m);
-                    ui.updateMembershipOptions(m);
-                });
+                setCurrentUser(user);
+                clearAuthFields();
             })
-            .catch(xhr => alert('Login failed: ' + xhr.responseText))
-            .always(() => this.reset());
+            .catch(xhr => {
+                alert('Login failed: ' + xhr.responseText);
+            });
+    });
+
+    // Sign up using shared fields
+    $('#signupButton').click(function () {
+        const data = getAuthFields();
+
+        if (!data.email || !data.password) {
+            alert("Enter email and password to sign up.");
+            return;
+        }
+
+        api.createUser(data)
+            .then(user => {
+                clearAuthFields();
+                api.getUsers().then(ui.renderUsers);
+                setCurrentUser(user);
+            })
+            .catch(xhr => {
+                alert('Sign up failed: ' + xhr.responseText);
+            });
+    });
+
+    // Logout
+    $('#logoutButton').click(function() {
+        setCurrentUser(null);
     });
 
     // Create perk
     $('#createPerkForm').submit(function(e) {
         e.preventDefault();
-        if (!currentUser) return alert('Please log in first.');
+        if (!currentUser) return alert('Please log in first.'); // logically should be unreachable, but ok to leave for now
 
         const perk = {
             description: $('#perkDescription').val().trim(),
@@ -71,7 +115,7 @@ $(function() {
     // Add membership to profile
     $('#addMembershipForm').submit(function(e) {
         e.preventDefault();
-        if (!currentUser) return alert('Please log in first.');
+        if (!currentUser) return alert('Please log in first.'); // logically should be unreachable, but ok to leave for now
 
         const membership = $('#membershipSelect').val().trim();
         if (!membership) return;
