@@ -1,58 +1,172 @@
 package com.example.perkmanager.controller;
 
-import com.example.perkmanager.repository.PerkRepository;
-import com.example.perkmanager.repository.UserRepository;
 import com.example.perkmanager.model.AppUser;
 import com.example.perkmanager.model.Perk;
+import com.example.perkmanager.model.Profile;
+import com.example.perkmanager.repository.PerkRepository;
+import com.example.perkmanager.repository.ProfileRepository;
+import com.example.perkmanager.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/perkmanager")
 public class AppController {
 
-    @Autowired
-    private PerkRepository perkRepo;
-    @Autowired
-    private UserRepository userRepo;
+    private final UserRepository userRepo;
+    private final PerkRepository perkRepo;
+    private final ProfileRepository profileRepo;
 
-    @GetMapping()
-    public List<AppUser> getAll() {
+    @Autowired
+    public AppController(UserRepository userRepo,
+                         PerkRepository perkRepo,
+                         ProfileRepository profileRepo) {
+        this.userRepo = userRepo;
+        this.perkRepo = perkRepo;
+        this.profileRepo = profileRepo;
+    }
+
+    // ---------------------------------------------------------------------
+    // Users
+    // ---------------------------------------------------------------------
+
+    // GET /api/perkmanager
+    @GetMapping
+    public List<AppUser> getAllUsers() {
         return (List<AppUser>) userRepo.findAll();
     }
 
+    // POST /api/perkmanager  (create user)
     @PostMapping
-    public AppUser create(@RequestBody AppUser user) {
+    public AppUser createUser(@RequestBody AppUser user) {
+        // Ensure profile exists
+        if (user.getProfile() == null) {
+            user.setProfile(new Profile());
+        }
         return userRepo.save(user);
     }
 
-    @GetMapping("/{userId}/perks")
-    public List<Perk> getUserPerks(@PathVariable Long userId) {
-        AppUser user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        return perkRepo.findByPostedBy(user);
-    }
-
+    // POST /api/perkmanager/login
     @PostMapping("/login")
-    public AppUser login(@RequestBody AppUser loginRequest) {
+    public ResponseEntity<?> login(@RequestBody AppUser loginRequest) {
         AppUser user = userRepo.findByEmail(loginRequest.getEmail());
         if (user == null || !user.getPassword().equals(loginRequest.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid credentials");
         }
-        return user;
+        return ResponseEntity.ok(user);
     }
 
+    // ---------------------------------------------------------------------
+    // Perks
+    // ---------------------------------------------------------------------
+
+    // 🔹 NEW: GET /api/perkmanager/perks  -> all perks (any user)
+    @GetMapping("/perks")
+    public List<Perk> getAllPerks() {
+        return (List<Perk>) perkRepo.findAll();
+    }
+
+    // GET /api/perkmanager/{userId}/perks  -> perks for a specific user
+    @GetMapping("/{userId}/perks")
+    public ResponseEntity<List<Perk>> getUserPerks(@PathVariable Long userId) {
+        Optional<AppUser> maybeUser = userRepo.findById(userId);
+        if (maybeUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        AppUser user = maybeUser.get();
+        List<Perk> perks = perkRepo.findByPostedBy(user);
+        return ResponseEntity.ok(perks);
+    }
+
+    // POST /api/perkmanager/{userId}/perks  -> create perk for a user
     @PostMapping("/{userId}/perks")
-    public Perk createPerk(@PathVariable Long userId, @RequestBody Perk perk) {
-        Optional<AppUser> user = userRepo.findById(userId);
+    public ResponseEntity<Perk> createPerk(@PathVariable Long userId,
+                                           @RequestBody Perk perk) {
+        Optional<AppUser> maybeUser = userRepo.findById(userId);
+        if (maybeUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
 
-        perk.setPostedBy(user.orElse(null));
+        AppUser user = maybeUser.get();
+        perk.setPostedBy(user);
 
-        perk.setUpvotes(0);
-        perk.setDownvotes(0);
+        // ensure default votes
+        if (perk.getUpvotes() < 0) perk.setUpvotes(0);
+        if (perk.getDownvotes() < 0) perk.setDownvotes(0);
 
-        return perkRepo.save(perk);
+        Perk saved = perkRepo.save(perk);
+
+        // Match tests: return 200 OK
+        return ResponseEntity.ok(saved);
+    }
+
+    // POST /api/perkmanager/perks/{perkId}/upvote
+    @PostMapping("/perks/{perkId}/upvote")
+    public ResponseEntity<Perk> upvotePerk(@PathVariable Long perkId) {
+        return perkRepo.findById(perkId)
+                .map(perk -> {
+                    perk.upvote();
+                    perkRepo.save(perk);
+                    return ResponseEntity.ok(perk);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ---------------------------------------------------------------------
+    // Profile & Memberships
+    // ---------------------------------------------------------------------
+
+    // GET /api/perkmanager/{userId}/profile
+    @GetMapping("/{userId}/profile")
+    public ResponseEntity<Set<String>> getProfile(@PathVariable Long userId) {
+        Optional<AppUser> maybeUser = userRepo.findById(userId);
+        if (maybeUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        AppUser user = maybeUser.get();
+        Profile profile = user.getProfile();
+        if (profile == null) {
+            profile = new Profile();
+            user.setProfile(profile);
+            userRepo.save(user);
+        }
+
+        return ResponseEntity.ok(profile.getMemberships());
+    }
+
+    // POST /api/perkmanager/{userId}/profile
+    // Expected body: { "membership": "VISA" }
+    @PostMapping("/{userId}/profile")
+    public ResponseEntity<Set<String>> addMembership(@PathVariable Long userId,
+                                                     @RequestBody Map<String, String> body) {
+        String membership = body.get("membership");
+        if (membership == null || membership.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Optional<AppUser> maybeUser = userRepo.findById(userId);
+        if (maybeUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        AppUser user = maybeUser.get();
+        Profile profile = user.getProfile();
+        if (profile == null) {
+            profile = new Profile();
+            user.setProfile(profile);
+        }
+
+        profile.addMembership(membership);
+        // Save user (cascade may save profile as well)
+        userRepo.save(user);
+
+        return ResponseEntity.ok(profile.getMemberships());
     }
 }
