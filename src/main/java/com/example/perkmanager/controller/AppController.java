@@ -42,12 +42,34 @@ public class AppController {
 
     // POST /api/perkmanager  (create user)
     @PostMapping
-    public AppUser createUser(@RequestBody AppUser user) {
+    public ResponseEntity<?> createUser(@RequestBody AppUser user) {
+        // Basic validation
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Email is required");
+        }
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Password is required");
+        }
+
+        // Check if email is already in use
+        AppUser existing = userRepo.findByEmail(user.getEmail());
+        if (existing != null) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Email already in use");
+        }
+
         // Ensure profile exists
         if (user.getProfile() == null) {
             user.setProfile(new Profile());
         }
-        return userRepo.save(user);
+
+        AppUser saved = userRepo.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     // POST /api/perkmanager/login
