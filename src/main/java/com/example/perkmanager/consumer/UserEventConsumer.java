@@ -2,7 +2,8 @@ package com.example.perkmanager.consumer;
 
 import com.example.perkmanager.event.MembershipAddedEvent;
 import com.example.perkmanager.event.UserRegisteredEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -12,8 +13,9 @@ import org.springframework.stereotype.Component;
  * Listens to user/profile events and updates read models
  */
 @Component
-@Slf4j
 public class UserEventConsumer {
+
+    private static final Logger log = LoggerFactory.getLogger(UserEventConsumer.class);
 
     /**
      * Consumer: UserRegisteredEvent

@@ -3,7 +3,8 @@ package com.example.perkmanager.consumer;
 import com.example.perkmanager.event.PerkCreatedEvent;
 import com.example.perkmanager.event.PerkDownvotedEvent;
 import com.example.perkmanager.event.PerkUpvotedEvent;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -21,8 +22,9 @@ import org.springframework.stereotype.Component;
  * 4. Update materialized views
  */
 @Component
-@Slf4j
 public class PerkEventConsumer {
+
+    private static final Logger log = LoggerFactory.getLogger(PerkEventConsumer.class);
 
     /**
      * Consumer: PerkCreatedEvent

@@ -6,7 +6,8 @@ import com.example.perkmanager.model.Perk;
 import com.example.perkmanager.query.*;
 import com.example.perkmanager.repository.PerkRepository;
 import com.example.perkmanager.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,8 +20,9 @@ import java.util.stream.StreamSupport;
  * Optimized for read performance
  */
 @Service
-@Slf4j
 public class PerkQueryHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(PerkQueryHandler.class);
 
     private final PerkRepository perkRepository;
     private final UserRepository userRepository;

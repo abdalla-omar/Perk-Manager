@@ -9,7 +9,8 @@ import com.example.perkmanager.model.Profile;
 import com.example.perkmanager.repository.ProfileRepository;
 import com.example.perkmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,8 +20,9 @@ import java.time.LocalDateTime;
  * Handles commands that modify user/profile state and publishes events
  */
 @Service
-@Slf4j
 public class UserCommandHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(UserCommandHandler.class);
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;

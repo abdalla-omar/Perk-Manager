@@ -8,7 +8,8 @@ import com.example.perkmanager.model.Perk;
 import com.example.perkmanager.query.*;
 import com.example.perkmanager.service.*;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,9 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/cqrs")
-@Slf4j
 public class CqrsController {
+
+    private static final Logger log = LoggerFactory.getLogger(CqrsController.class);
 
     // Command Handlers (Write Operations)
     private final PerkCommandHandler perkCommandHandler;

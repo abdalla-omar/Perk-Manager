@@ -4,7 +4,8 @@ import com.example.perkmanager.dto.UserProfileReadModel;
 import com.example.perkmanager.model.AppUser;
 import com.example.perkmanager.query.GetUserProfileQuery;
 import com.example.perkmanager.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,8 +13,9 @@ import org.springframework.stereotype.Service;
  * Handles queries that read user/profile data without side effects
  */
 @Service
-@Slf4j
 public class UserQueryHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(UserQueryHandler.class);
 
     private final UserRepository userRepository;
 

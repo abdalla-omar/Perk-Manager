@@ -11,7 +11,8 @@ import com.example.perkmanager.model.Perk;
 import com.example.perkmanager.repository.PerkRepository;
 import com.example.perkmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,8 +22,9 @@ import java.time.LocalDateTime;
  * Handles commands that modify perk state and publishes events
  */
 @Service
-@Slf4j
 public class PerkCommandHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(PerkCommandHandler.class);
 
     private final PerkRepository perkRepository;
     private final UserRepository userRepository;

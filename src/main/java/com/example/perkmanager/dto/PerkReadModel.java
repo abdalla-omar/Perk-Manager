@@ -2,9 +2,6 @@ package com.example.perkmanager.dto;
 
 import com.example.perkmanager.enumerations.MembershipType;
 import com.example.perkmanager.enumerations.ProductType;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
@@ -13,9 +10,6 @@ import java.time.LocalDate;
  * This is separate from the write model (Perk entity) to allow
  * independent optimization of read and write operations
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PerkReadModel {
     private Long id;
     private String description;
@@ -29,6 +23,25 @@ public class PerkReadModel {
     private String postedByEmail;
     private Long postedByUserId;
     private boolean isActive; // Calculated based on dates
+
+    public PerkReadModel() {}
+
+    public PerkReadModel(Long id, String description, MembershipType membership, ProductType product,
+                         int upvotes, int downvotes, int netScore, LocalDate startDate, LocalDate endDate,
+                         String postedByEmail, Long postedByUserId, boolean isActive) {
+        this.id = id;
+        this.description = description;
+        this.membership = membership;
+        this.product = product;
+        this.upvotes = upvotes;
+        this.downvotes = downvotes;
+        this.netScore = netScore;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.postedByEmail = postedByEmail;
+        this.postedByUserId = postedByUserId;
+        this.isActive = isActive;
+    }
 
     /**
      * Factory method to create from Perk entity
@@ -53,4 +66,30 @@ public class PerkReadModel {
 
         return model;
     }
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public MembershipType getMembership() { return membership; }
+    public void setMembership(MembershipType membership) { this.membership = membership; }
+    public ProductType getProduct() { return product; }
+    public void setProduct(ProductType product) { this.product = product; }
+    public int getUpvotes() { return upvotes; }
+    public void setUpvotes(int upvotes) { this.upvotes = upvotes; }
+    public int getDownvotes() { return downvotes; }
+    public void setDownvotes(int downvotes) { this.downvotes = downvotes; }
+    public int getNetScore() { return netScore; }
+    public void setNetScore(int netScore) { this.netScore = netScore; }
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public String getPostedByEmail() { return postedByEmail; }
+    public void setPostedByEmail(String postedByEmail) { this.postedByEmail = postedByEmail; }
+    public Long getPostedByUserId() { return postedByUserId; }
+    public void setPostedByUserId(Long postedByUserId) { this.postedByUserId = postedByUserId; }
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean active) { isActive = active; }
 }
