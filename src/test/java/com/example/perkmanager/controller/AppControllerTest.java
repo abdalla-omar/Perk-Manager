@@ -15,13 +15,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 @WebMvcTest(AppController.class)
 class AppControllerTest {
@@ -38,13 +40,12 @@ class AppControllerTest {
     @MockBean
     private ProfileRepository profileRepo;
 
-
     private AppUser testUser;
     private Perk testPerk;
 
     @BeforeEach
     void setUp() {
-        testUser = new AppUser("test@example.com", "password"); // Initialize testUser
+        testUser = new AppUser("test@example.com", "password");
         testPerk = new Perk(
                 "Test Perk",
                 null, // MembershipType
@@ -56,7 +57,7 @@ class AppControllerTest {
     }
 
     @Test
-    void testGetAll() throws Exception {
+    void testGetAllUsers() throws Exception {
         when(userRepo.findAll()).thenReturn(Collections.singletonList(testUser));
 
         mockMvc.perform(get("/api/perkmanager"))
@@ -65,7 +66,7 @@ class AppControllerTest {
     }
 
     @Test
-    void testCreate() throws Exception {
+    void testCreateUser() throws Exception {
         when(userRepo.save(any(AppUser.class))).thenReturn(testUser);
 
         mockMvc.perform(post("/api/perkmanager")
@@ -77,11 +78,7 @@ class AppControllerTest {
 
     @Test
     void testGetUserPerks() throws Exception {
-        Mockito.doAnswer(invocation -> {
-            Long userId = invocation.getArgument(0);
-            return userId.equals(1L) ? Optional.of(testUser) : Optional.empty();
-        }).when(userRepo).findById(any(Long.class));
-
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser)); // Ensure Optional.of(testUser)
         when(perkRepo.findByPostedBy(testUser)).thenReturn(Collections.singletonList(testPerk));
 
         mockMvc.perform(get("/api/perkmanager/1/perks"))
@@ -90,7 +87,7 @@ class AppControllerTest {
     }
 
     @Test
-    void testLogin() throws Exception {
+    void testLoginUser() throws Exception {
         when(userRepo.findByEmail("test@example.com")).thenReturn(testUser);
 
         mockMvc.perform(post("/api/perkmanager/login")
@@ -101,12 +98,8 @@ class AppControllerTest {
     }
 
     @Test
-    void testCreatePerk() throws Exception {
-        Mockito.doAnswer(invocation -> {
-            Long userId = invocation.getArgument(0);
-            return userId.equals(1L) ? Optional.of(testUser) : Optional.empty();
-        }).when(userRepo).findById(any(Long.class));
-
+    void testCreatePerkForUser() throws Exception {
+        when(userRepo.findById(1L)).thenReturn(Optional.ofNullable(testUser));
         when(perkRepo.save(any(Perk.class))).thenReturn(testPerk);
 
         mockMvc.perform(post("/api/perkmanager/1/perks")
@@ -114,5 +107,25 @@ class AppControllerTest {
                         .content("{\"description\":\"Test Perk\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("Test Perk"));
+    }
+
+    @Test
+    void testDeleteUser_NotFound() throws Exception {
+        // Mock the repository to return empty for ID 1
+        when(userRepo.findById(1L)).thenReturn(Optional.empty());
+
+        // Perform the DELETE request and verify the response
+        mockMvc.perform(delete("/api/perkmanager/1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetUserById_NotFound() throws Exception {
+        // Mock the repository to return empty for ID 1
+        when(userRepo.findById(1L)).thenReturn(Optional.empty());
+
+        // Perform the GET request and verify the response
+        mockMvc.perform(get("/api/perkmanager/1"))
+                .andExpect(status().isNotFound());
     }
 }
