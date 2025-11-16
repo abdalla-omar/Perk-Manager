@@ -6,6 +6,14 @@ const ui = {
         users.forEach(u => $list.append(`<li>ID: ${u.id} - ${u.email}</li>`));
     },
 
+    showMessage : (msg, type) => {
+        const $box = $('#messageBox');
+        $box.text(msg);
+        $box.removeClass().addClass(type).fadeIn();
+
+        setTimeout(() => $box.fadeOut(), 1500);
+    },
+
     // Your perks (for current user)
     renderPerks: (perks) => {
         const $list = $('#userPerks').empty();
@@ -16,14 +24,18 @@ const ui = {
 
             $li.append(`${p.description} - ${p.product} - ${p.membership} `);
 
-            const $count = $(`<span>(Upvotes: ${p.upvotes})</span>`);
+            const $count = $(
+                `<span class="perk-upvotes" data-perk-id="${p.id}">(Upvotes: ${p.upvotes})</span>`
+            );
             $li.append($count);
 
             const $btn = $('<button type="button">Upvote</button>');
             $btn.click(() => {
                 api.upvotePerk(p.id)
                     .then(updated => {
-                        $count.text(`(Upvotes: ${updated.upvotes})`);
+                        const id = updated.id ?? p.id; // fallback if backend doesn't send id
+                        $(`.perk-upvotes[data-perk-id="${id}"]`)
+                            .text(`(Upvotes: ${updated.upvotes})`);
                     })
                     .catch(err => {
                         console.error('Error upvoting perk:', err);
@@ -50,14 +62,18 @@ const ui = {
             const postedBy = p.postedBy?.email || 'Unknown user';
             $li.append(`${p.description} - ${p.product} - ${p.membership} (by ${postedBy}) `);
 
-            const $count = $(`<span>(Upvotes: ${p.upvotes})</span>`);
+            const $count = $(
+                `<span class="perk-upvotes" data-perk-id="${p.id}">(Upvotes: ${p.upvotes})</span>`
+            );
             $li.append($count);
 
             const $btn = $('<button type="button">Upvote</button>');
             $btn.click(() => {
                 api.upvotePerk(p.id)
                     .then(updated => {
-                        $count.text(`(Upvotes: ${updated.upvotes})`);
+                        const id = updated.id ?? p.id; // fallback if backend doesn't send id
+                        $(`.perk-upvotes[data-perk-id="${id}"]`)
+                            .text(`(Upvotes: ${updated.upvotes})`);
                     })
                     .catch(err => {
                         console.error('Error upvoting perk:', err);
@@ -83,5 +99,24 @@ const ui = {
             .empty()
             .append(`<option value="">-- Select Membership --</option>`);
         memberships?.forEach(m => $select.append(`<option value="${m}">${m}</option>`));
+    },
+
+    setAuthUI(isLoggedIn) {
+        // show/hide sections based on auth  (loggedIn or not)
+        // Public area (login + signup + existing users)
+        $('#publicSection').toggle(!isLoggedIn);
+
+        // App area + logout bar
+        $('#appSection').toggleClass('hidden', !isLoggedIn);
+        $('#logoutBar').toggleClass('hidden', !isLoggedIn);
+
+        // clear current user email when logged out
+        if (!isLoggedIn) {
+            $('#currentUserEmail').text('');
+        }
+    },
+
+    setCurrentUserEmail(email) {
+        $('#currentUserEmail').text(email || '');
     }
 };
