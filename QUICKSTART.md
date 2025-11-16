@@ -130,38 +130,6 @@ docker-compose down -v
 
 ---
 
-## Demo Script for Presentation (12 min)
-
-### Slide 1: Architecture (2 min)
-- Show `docs/CQRS_KAFKA_GUIDE.md` architecture diagram
-- Explain: Commands → Events → Kafka → Consumers → Queries
-
-### Slide 2: Code Walkthrough (3 min)
-Show key files:
-1. `CreatePerkCommand.java` - Command DTO
-2. `PerkCommandHandler.java` - Business logic + event publishing
-3. `PerkCreatedEvent.java` - Domain event
-4. `PerkEventConsumer.java` - Event consumer
-5. `CqrsController.java` - REST endpoints
-
-### Slide 3: Live Demo (5 min)
-1. Start Kafka consumer in terminal
-2. Run cURL commands from Quick Start
-3. Show events streaming in Kafka console
-4. Show application logs
-5. Query results
-
-### Slide 4: Testing & Benefits (2 min)
-- Run `mvn test` - show passing tests
-- Highlight benefits:
-  - Scalability
-  - Separation of concerns
-  - Event-driven
-  - Audit trail
-  - Cloud-ready (Azure Event Hubs compatible)
-
----
-
 ## Troubleshooting
 
 **Problem**: Kafka connection refused
@@ -188,22 +156,3 @@ lsof -i :8080
 # Check: Application logs
 mvn spring-boot:run -X
 ```
-
----
-
-## What's Included
-
-✅ **6 Kafka Topics** (perk.created, perk.upvoted, etc.)
-✅ **5 Command Handlers** (CreatePerk, UpvotePerk, etc.)
-✅ **5 Query Handlers** (GetAllPerks, GetByVotes, etc.)
-✅ **6 Domain Events** (with JSON serialization)
-✅ **2 Event Consumers** (Perk, User)
-✅ **Read Models** (DTOs optimized for queries)
-✅ **Integration Tests** (with embedded Kafka)
-✅ **Comprehensive Documentation**
-✅ **Docker Compose** (easy Kafka setup)
-✅ **Azure-Ready** (Event Hubs compatible)
-
----
-
-**Ready to Demo! 🚀**

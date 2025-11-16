@@ -177,7 +177,7 @@ bin/kafka-server-start.sh config/server.properties
 
 ```bash
 # Clone repo
-git clone <your-repo>
+git clone <repo>
 cd Perk-Manager
 
 # Build
@@ -406,42 +406,7 @@ kafka-console-consumer.sh --bootstrap-server localhost:9092 \
 - App: `localhost:8080`
 - H2 Console: `http://localhost:8080/h2-console`
 
-### Azure Deployment
 
-#### Option 1: Azure Event Hubs (Kafka-compatible)
-
-```properties
-# application-prod.properties
-spring.kafka.bootstrap-servers=${AZURE_EVENTHUB_CONNECTION_STRING}
-spring.kafka.properties.security.protocol=SASL_SSL
-spring.kafka.properties.sasl.mechanism=PLAIN
-spring.kafka.properties.sasl.jaas.config=...
-```
-
-#### Option 2: Azure Container Apps + Kafka
-
-```bash
-# 1. Deploy Kafka to AKS or ACA
-# 2. Update application.properties with Kafka host
-# 3. Deploy Spring Boot app
-az containerapp create \
-  --name perk-manager \
-  --resource-group mygroup \
-  --image perkmanager:latest \
-  --environment myenv \
-  --env-vars KAFKA_BOOTSTRAP_SERVERS=<kafka-host>:9092
-```
-
-### Production Considerations
-
-1. **Use Persistent Kafka** (not in-memory)
-2. **Increase Replication Factor** (3 for production)
-3. **Add Authentication** (SASL/SSL)
-4. **Implement Retry Logic** (Kafka producer/consumer)
-5. **Add Dead Letter Queue** (DLQ)
-6. **Monitor with Actuator** (`/actuator/health`)
-7. **Use PostgreSQL/MySQL** (replace H2)
-8. **Add Elasticsearch** for search optimization
 
 ---
 
