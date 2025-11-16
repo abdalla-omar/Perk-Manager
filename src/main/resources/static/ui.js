@@ -1,4 +1,5 @@
 // Renders data and updates the page elements dynamically
+// Updated to work with CQRS Read Models
 const ui = {
     renderUsers: (users) => {
         const $list = $('#userList').empty();
@@ -14,7 +15,7 @@ const ui = {
         setTimeout(() => $box.fadeOut(), 1500);
     },
 
-    // Your perks (for current user)
+    // Your perks (for current user - shows matching perks from CQRS)
     renderPerks: (perks) => {
         const $list = $('#userPerks').empty();
         if (!perks.length) return $list.append('<li>No perks available.</li>');
@@ -22,20 +23,21 @@ const ui = {
         perks.forEach(p => {
             const $li = $('<li>');
 
+            // CQRS Read Model includes netScore and active status
+            const activeStatus = p.active ? '✓' : '✗';
             $li.append(`${p.description} - ${p.product} - ${p.membership} `);
+            $li.append(`<em>(Net: ${p.netScore}, Active: ${activeStatus})</em> `);
 
-            const $count = $(
-                `<span class="perk-upvotes" data-perk-id="${p.id}">(Upvotes: ${p.upvotes})</span>`
-            );
+            const $count = $(`<span>(↑${p.upvotes} ↓${p.downvotes})</span>`);
             $li.append($count);
 
-            const $btn = $('<button type="button">Upvote</button>');
-            $btn.click(() => {
+            // Upvote button
+            const $upBtn = $('<button type="button">👍 Upvote</button>');
+            $upBtn.click(() => {
                 api.upvotePerk(p.id)
                     .then(updated => {
-                        const id = updated.id ?? p.id; // fallback if backend doesn't send id
-                        $(`.perk-upvotes[data-perk-id="${id}"]`)
-                            .text(`(Upvotes: ${updated.upvotes})`);
+                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
+                        console.log('Upvote event published to Kafka!');
                     })
                     .catch(err => {
                         console.error('Error upvoting perk:', err);
@@ -43,14 +45,30 @@ const ui = {
                     });
             });
 
+            // Downvote button (new CQRS feature!)
+            const $downBtn = $('<button type="button">👎 Downvote</button>');
+            $downBtn.click(() => {
+                api.downvotePerk(p.id)
+                    .then(updated => {
+                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
+                        console.log('Downvote event published to Kafka!');
+                    })
+                    .catch(err => {
+                        console.error('Error downvoting perk:', err);
+                        alert('Failed to downvote perk.');
+                    });
+            });
+
             $li.append(' ');
-            $li.append($btn);
+            $li.append($upBtn);
+            $li.append(' ');
+            $li.append($downBtn);
 
             $list.append($li);
         });
     },
 
-    // 🔹 NEW: All perks (from everyone)
+    // All perks (from everyone) - using CQRS Read Model
     renderAllPerks: (perks) => {
         const $list = $('#allPerks').empty();
         if (!perks.length) return $list.append('<li>No perks available.</li>');
@@ -58,22 +76,25 @@ const ui = {
         perks.forEach(p => {
             const $li = $('<li>');
 
-            // Show who posted it as well
-            const postedBy = p.postedBy?.email || 'Unknown user';
-            $li.append(`${p.description} - ${p.product} - ${p.membership} (by ${postedBy}) `);
+            // CQRS Read Model has postedByEmail instead of nested object
+            const postedBy = p.postedByEmail || 'Unknown user';
+            const activeStatus = p.active ? '✓ Active' : '✗ Inactive';
 
-            const $count = $(
-                `<span class="perk-upvotes" data-perk-id="${p.id}">(Upvotes: ${p.upvotes})</span>`
-            );
+            $li.append(`${p.description} - ${p.product} - ${p.membership} `);
+            $li.append(`<small>(by ${postedBy})</small> `);
+            $li.append(`<em>[Net: ${p.netScore}, ${activeStatus}]</em> `);
+
+            const $count = $(`<span>(↑${p.upvotes} ↓${p.downvotes})</span>`);
             $li.append($count);
 
-            const $btn = $('<button type="button">Upvote</button>');
-            $btn.click(() => {
+            // Upvote button
+            const $upBtn = $('<button type="button">👍</button>');
+            $upBtn.click(() => {
                 api.upvotePerk(p.id)
                     .then(updated => {
-                        const id = updated.id ?? p.id; // fallback if backend doesn't send id
-                        $(`.perk-upvotes[data-perk-id="${id}"]`)
-                            .text(`(Upvotes: ${updated.upvotes})`);
+                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
+                        // Show that event was published
+                        console.log('✓ PerkUpvotedEvent published to Kafka topic: perk.upvoted');
                     })
                     .catch(err => {
                         console.error('Error upvoting perk:', err);
@@ -81,8 +102,24 @@ const ui = {
                     });
             });
 
+            // Downvote button
+            const $downBtn = $('<button type="button">👎</button>');
+            $downBtn.click(() => {
+                api.downvotePerk(p.id)
+                    .then(updated => {
+                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
+                        console.log('✓ PerkDownvotedEvent published to Kafka topic: perk.downvoted');
+                    })
+                    .catch(err => {
+                        console.error('Error downvoting perk:', err);
+                        alert('Failed to downvote perk.');
+                    });
+            });
+
             $li.append(' ');
-            $li.append($btn);
+            $li.append($upBtn);
+            $li.append(' ');
+            $li.append($downBtn);
 
             $list.append($li);
         });
@@ -102,7 +139,7 @@ const ui = {
     },
 
     setAuthUI(isLoggedIn) {
-        // show/hide sections based on auth  (loggedIn or not)
+        // show/hide sections based on auth (loggedIn or not)
         // Public area (login + signup + existing users)
         $('#publicSection').toggle(!isLoggedIn);
 
