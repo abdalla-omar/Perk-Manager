@@ -1,0 +1,177 @@
+{
+  "info": {
+    "name": "Perk Manager - CQRS + Kafka",
+    "description": "API collection for testing CQRS endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Commands (Write)",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "users"]
+            }
+          }
+        },
+        {
+          "name": "Create Perk",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"description\": \"50% off movies with Aeroplan\",\n  \"membership\": \"AIRMILES\",\n  \"product\": \"MOVIES\",\n  \"startDate\": \"2025-01-01\",\n  \"endDate\": \"2025-12-31\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/perks",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "perks"]
+            }
+          }
+        },
+        {
+          "name": "Upvote Perk",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/perks/1/upvote",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "perks", "1", "upvote"]
+            }
+          }
+        },
+        {
+          "name": "Downvote Perk",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/perks/1/downvote",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "perks", "1", "downvote"]
+            }
+          }
+        },
+        {
+          "name": "Add Membership",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"membership\": \"AIRMILES\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/users/1/memberships",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "users", "1", "memberships"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Queries (Read)",
+      "item": [
+        {
+          "name": "Get All Perks",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/perks",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "perks"]
+            }
+          }
+        },
+        {
+          "name": "Get Perks by Votes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/perks/by-votes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "perks", "by-votes"]
+            }
+          }
+        },
+        {
+          "name": "Get Perks by Membership",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/perks/by-membership/AIRMILES",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "perks", "by-membership", "AIRMILES"]
+            }
+          }
+        },
+        {
+          "name": "Get Matching Perks (Personalized)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/users/1/matching-perks",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "users", "1", "matching-perks"]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/cqrs/users/1/profile",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "cqrs", "users", "1", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:8080/api/cqrs/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "cqrs", "health"]
+        }
+      }
+    }
+  ]
+}
