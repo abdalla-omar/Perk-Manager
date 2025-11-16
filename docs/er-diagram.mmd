@@ -1,0 +1,32 @@
+erDiagram
+    APP_USER ||--|| PROFILE : "has"
+    APP_USER ||--o{ PERK : "posts"
+    PROFILE ||--o{ PROFILE_MEMBERSHIP : "contains"
+
+    APP_USER {
+        BIGINT id PK
+        VARCHAR email UK
+        VARCHAR password
+        BIGINT profile_id FK
+    }
+
+    PROFILE {
+        BIGINT id PK
+    }
+
+    PROFILE_MEMBERSHIP {
+        BIGINT profile_id FK
+        VARCHAR membership
+    }
+
+    PERK {
+        BIGINT id PK
+        TEXT description
+        VARCHAR membership
+        VARCHAR product
+        INT upvotes
+        INT downvotes
+        DATE start_date
+        DATE end_date
+        BIGINT posted_by_id FK
+    }
