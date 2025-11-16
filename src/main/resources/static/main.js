@@ -150,7 +150,8 @@ $(function() {
             api.getMatchingPerks(currentUser.id).then(ui.renderPerks);
         }).catch(err => {
             console.error('Error adding membership:', err);
-            alert('Failed to add membership');
+            const errorMsg = err.responseText || err.statusText || 'Unknown error';
+            alert('Failed to add membership: ' + errorMsg);
         });
     });
 

@@ -13,6 +13,8 @@ public class Profile {
 
     // List of memberships: Air Miles, CAA, Visa, etc.
     @ElementCollection
+    @CollectionTable(name = "profile_membership", joinColumns = @JoinColumn(name = "profile_id"))
+    @Column(name = "membership")
     private Set<String> memberships = new HashSet<>();
 
     public Profile() {}
