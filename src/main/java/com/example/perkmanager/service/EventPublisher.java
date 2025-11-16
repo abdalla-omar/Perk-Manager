@@ -95,20 +95,28 @@ public class EventPublisher {
 
     /**
      * Generic publish method with async callback handling
+     * Gracefully handles Kafka unavailability - app continues to work even if Kafka is down
      */
     private void publish(String topic, String key, Object event, String eventType) {
-        CompletableFuture<SendResult<String, Object>> future =
-                kafkaTemplate.send(topic, key, event);
+        try {
+            CompletableFuture<SendResult<String, Object>> future =
+                    kafkaTemplate.send(topic, key, event);
 
-        future.whenComplete((result, ex) -> {
-            if (ex == null) {
-                log.info("Published {} event to topic [{}] with key [{}] at offset [{}]",
-                        eventType, topic, key, result.getRecordMetadata().offset());
-            } else {
-                log.error("Failed to publish {} event to topic [{}] with key [{}]: {}",
-                        eventType, topic, key, ex.getMessage(), ex);
-                // In production: implement retry logic or dead letter queue
-            }
-        });
+            future.whenComplete((result, ex) -> {
+                if (ex == null) {
+                    log.info("✓ Published {} event to topic [{}] with key [{}] at offset [{}]",
+                            eventType, topic, key, result.getRecordMetadata().offset());
+                } else {
+                    log.warn("⚠ Failed to publish {} event (Kafka unavailable): {}",
+                            eventType, ex.getMessage());
+                    // App continues to work - events just won't be published
+                }
+            });
+        } catch (Exception e) {
+            // Kafka is down - log warning but don't fail the request
+            log.warn("⚠ Kafka unavailable - {} event not published. App continues to work normally.",
+                    eventType);
+            // In production: implement retry logic, dead letter queue, or store events locally
+        }
     }
 }

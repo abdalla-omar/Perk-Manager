@@ -2,7 +2,7 @@ package com.example.perkmanager.command;
 
 import com.example.perkmanager.enumerations.MembershipType;
 import com.example.perkmanager.enumerations.ProductType;
-import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -30,7 +30,7 @@ public class CreatePerkCommand {
     private LocalDate startDate;
 
     @NotNull(message = "End date is required")
-    @Future(message = "End date must be in the future")
+    @FutureOrPresent(message = "End date must be today or in the future")
     private LocalDate endDate;
 
     public CreatePerkCommand() {}

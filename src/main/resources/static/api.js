@@ -80,8 +80,8 @@ const api = {
         url: `/api/cqrs/users/${id}/memberships`,
         method: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ membership }),
-        dataType: 'json'
+        data: JSON.stringify({ membership })
+        // Note: no dataType specified - server returns plain text
     }),
 
     // Command: Upvote a perk (publishes event to Kafka!)
