@@ -1,8 +1,8 @@
-# Perk Manager - Database Schema & UML
+# Perk Manager - Models & Database
 
 ## UML Class Diagram
 
-**View diagram:** [schema.mmd](./schema.mmd)
+**View diagram:** [uml-class-diagram.mmd](./uml-class-diagram.mmd)
 
 ```mermaid
 classDiagram
