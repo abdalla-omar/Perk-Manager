@@ -29,11 +29,7 @@ public class UserEventConsumer {
         log.info("Consumed UserRegisteredEvent - User ID: {}, Email: {}",
                 event.getUserId(), event.getEmail());
 
-        // TODO: In production:
-        // 1. Send welcome email
-        // 2. Create user profile in read model
-        // 3. Trigger analytics event
-        // 4. Initialize recommendations engine
+        // TODO: In production, send welcome email and initialize user profile in read model
     }
 
     /**
@@ -48,24 +44,6 @@ public class UserEventConsumer {
         log.info("Consumed MembershipAddedEvent - User ID: {}, Profile ID: {}, Membership: {}",
                 event.getUserId(), event.getProfileId(), event.getMembership());
 
-        // TODO: In production:
-        // 1. Update user profile in read model
-        // 2. Trigger personalized perk recommendations
-        // 3. Notify about relevant new perks
-        // 4. Update user segments for analytics
-    }
-
-    /**
-     * Consumer: MembershipRemovedEvent (if implemented)
-     */
-    @KafkaListener(
-            topics = "${kafka.topic.membership-removed}",
-            groupId = "${spring.kafka.consumer.group-id}"
-    )
-    public void consumeMembershipRemoved(@Payload com.example.perkmanager.event.MembershipRemovedEvent event) {
-        log.info("Consumed MembershipRemovedEvent - User ID: {}, Membership: {}",
-                event.getUserId(), event.getMembership());
-
-        // Update read model to reflect membership removal
+        // TODO: In production, update read model and trigger personalized recommendations
     }
 }

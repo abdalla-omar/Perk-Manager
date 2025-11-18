@@ -28,9 +28,6 @@ public class KafkaConfig {
     @Value("${kafka.topic.membership-added}")
     private String membershipAddedTopic;
 
-    @Value("${kafka.topic.membership-removed}")
-    private String membershipRemovedTopic;
-
     /**
      * Topic for Perk Creation events
      * Partitions: 3 for parallel processing
@@ -71,14 +68,6 @@ public class KafkaConfig {
     @Bean
     public NewTopic membershipAddedTopic() {
         return TopicBuilder.name(membershipAddedTopic)
-                .partitions(2)
-                .replicas(1)
-                .build();
-    }
-
-    @Bean
-    public NewTopic membershipRemovedTopic() {
-        return TopicBuilder.name(membershipRemovedTopic)
                 .partitions(2)
                 .replicas(1)
                 .build();
