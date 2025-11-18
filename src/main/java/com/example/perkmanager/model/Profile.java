@@ -19,16 +19,8 @@ public class Profile {
 
     public Profile() {}
 
-    public boolean hasMembership(String membership) {
-        return memberships.contains(membership);
-    }
-
     public void addMembership(String membership) {
         memberships.add(membership);
-    }
-
-    public void removeMembership(String membership) {
-        memberships.remove(membership);
     }
 
     public Long getId() {

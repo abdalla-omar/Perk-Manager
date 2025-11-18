@@ -37,9 +37,6 @@ public class EventPublisher {
     @Value("${kafka.topic.membership-added}")
     private String membershipAddedTopic;
 
-    @Value("${kafka.topic.membership-removed}")
-    private String membershipRemovedTopic;
-
     public EventPublisher(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
@@ -83,14 +80,6 @@ public class EventPublisher {
     public void publishMembershipAdded(MembershipAddedEvent event) {
         String key = String.valueOf(event.getUserId());
         publish(membershipAddedTopic, key, event, "MembershipAdded");
-    }
-
-    /**
-     * Publish MembershipRemovedEvent
-     */
-    public void publishMembershipRemoved(MembershipRemovedEvent event) {
-        String key = String.valueOf(event.getUserId());
-        publish(membershipRemovedTopic, key, event, "MembershipRemoved");
     }
 
     /**
