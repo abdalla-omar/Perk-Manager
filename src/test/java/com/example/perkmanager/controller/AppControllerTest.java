@@ -108,4 +108,47 @@ class AppControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("Test Perk"));
     }
+
+    @Test
+    void testChangePassword_Success() throws Exception {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("oldPassword", "$2a$10$hashedPassword")).thenReturn(true);
+        when(passwordEncoder.encode("newPassword")).thenReturn("$2a$10$newHashedPassword");
+        when(userRepo.save(any(AppUser.class))).thenReturn(testUser);
+
+        mockMvc.perform(put("/api/perkmanager/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"oldPassword\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password changed successfully"));
+    }
+
+    @Test
+    void testChangePassword_WrongCurrentPassword() throws Exception {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("wrongPassword", "$2a$10$hashedPassword")).thenReturn(false);
+
+        mockMvc.perform(put("/api/perkmanager/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"wrongPassword\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testChangePassword_SamePassword() throws Exception {
+        mockMvc.perform(put("/api/perkmanager/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"password\",\"newPassword\":\"password\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testChangePassword_UserNotFound() throws Exception {
+        when(userRepo.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(put("/api/perkmanager/999/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"oldPassword\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isNotFound());
+    }
 }

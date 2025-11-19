@@ -146,6 +146,47 @@ public class AppController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // PUT /api/perkmanager/{userId}/password
+    @PutMapping("/{userId}/password")
+    public ResponseEntity<?> changePassword(@PathVariable Long userId,
+                                           @RequestBody Map<String, String> body) {
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+
+        // Validation
+        if (currentPassword == null || currentPassword.isBlank()) {
+            return ResponseEntity.badRequest().body("Current password is required");
+        }
+        if (newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body("New password is required");
+        }
+        if (currentPassword.equals(newPassword)) {
+            return ResponseEntity.badRequest().body("New password must be different from current password");
+        }
+
+        // Find user
+        Optional<AppUser> maybeUser = userRepo.findById(userId);
+        if (maybeUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        AppUser user = maybeUser.get();
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Current password is incorrect");
+        }
+
+        // Hash and update new password
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(hashedPassword);
+        userRepo.save(user);
+
+        return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+    }
+
     // ---------------------------------------------------------------------
     // Profile & Memberships
     // ---------------------------------------------------------------------
