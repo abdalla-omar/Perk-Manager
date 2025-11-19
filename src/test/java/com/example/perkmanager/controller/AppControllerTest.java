@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -40,12 +42,15 @@ class AppControllerTest {
     @MockBean
     private ProfileRepository profileRepo;
 
+    @MockBean
+    private PasswordEncoder passwordEncoder;
+
     private AppUser testUser;
     private Perk testPerk;
 
     @BeforeEach
     void setUp() {
-        testUser = new AppUser("test@example.com", "password");
+        testUser = new AppUser("test@example.com", "$2a$10$hashedPassword");
         testPerk = new Perk(
                 "Test Perk",
                 null, // MembershipType
@@ -58,6 +63,8 @@ class AppControllerTest {
 
     @Test
     void testCreateUser() throws Exception {
+        // Mock password encoding
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashedPassword");
         when(userRepo.save(any(AppUser.class))).thenReturn(testUser);
 
         mockMvc.perform(post("/api/perkmanager")
@@ -80,6 +87,8 @@ class AppControllerTest {
     @Test
     void testLoginUser() throws Exception {
         when(userRepo.findByEmail("test@example.com")).thenReturn(testUser);
+        // Mock password matching - plain "password" matches hashed password
+        when(passwordEncoder.matches("password", "$2a$10$hashedPassword")).thenReturn(true);
 
         mockMvc.perform(post("/api/perkmanager/login")
                         .contentType(MediaType.APPLICATION_JSON)
