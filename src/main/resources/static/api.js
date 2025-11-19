@@ -96,5 +96,17 @@ const api = {
         url: `/api/cqrs/perks/${perkId}/downvote`,
         method: 'POST',
         dataType: 'json'
+    }),
+
+    // Command: Change password
+    changePassword: (userId, currentPassword, newPassword) => $.ajax({
+        url: `/api/perkmanager/${userId}/password`,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            currentPassword: currentPassword,
+            newPassword: newPassword
+        }),
+        dataType: 'json'
     })
 };

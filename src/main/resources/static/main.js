@@ -162,4 +162,58 @@ $(function() {
             ui.renderAllPerks(perks);
         });
     });
+
+    // Change Password button - show modal
+    $('#changePasswordButton').click(function() {
+        $('#changePasswordModal').removeClass('hidden');
+    });
+
+    // Cancel button - hide modal
+    $('#cancelChangePassword').click(function() {
+        $('#changePasswordModal').addClass('hidden');
+        $('#changePasswordForm')[0].reset();
+    });
+
+    // Change password form submission
+    $('#changePasswordForm').submit(function(e) {
+        e.preventDefault();
+        if (!currentUser) return alert('Please log in first.');
+
+        const currentPassword = $('#currentPassword').val().trim();
+        const newPassword = $('#newPassword').val().trim();
+        const confirmPassword = $('#confirmPassword').val().trim();
+
+        // Validation
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('All fields are required.');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert('New password and confirmation do not match.');
+            return;
+        }
+
+        if (currentPassword === newPassword) {
+            alert('New password must be different from current password.');
+            return;
+        }
+
+        // Call API
+        api.changePassword(currentUser.id, currentPassword, newPassword)
+            .then(response => {
+                alert('Password changed successfully! Redirecting to home page...');
+                $('#changePasswordModal').addClass('hidden');
+                $('#changePasswordForm')[0].reset();
+
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    setCurrentUser(null);
+                }, 2000);
+            })
+            .catch(xhr => {
+                const errorMsg = xhr.responseText || 'Failed to change password';
+                alert('Error: ' + errorMsg);
+            });
+    });
 });
