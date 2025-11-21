@@ -11,5 +11,4 @@ public interface PerkRepository extends CrudRepository<Perk, Long> {
     List<Perk> findAllByOrderByUpvotesDesc();
     List<Perk> findByMembership(MembershipType membership);
     List<Perk> findByPostedBy(AppUser user);
-    Perk findById(long id);
 }

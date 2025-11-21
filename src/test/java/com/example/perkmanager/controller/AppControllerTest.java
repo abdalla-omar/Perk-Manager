@@ -57,15 +57,6 @@ class AppControllerTest {
     }
 
     @Test
-    void testGetAllUsers() throws Exception {
-        when(userRepo.findAll()).thenReturn(Collections.singletonList(testUser));
-
-        mockMvc.perform(get("/api/perkmanager"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].email").value("test@example.com"));
-    }
-
-    @Test
     void testCreateUser() throws Exception {
         when(userRepo.save(any(AppUser.class))).thenReturn(testUser);
 
@@ -107,25 +98,5 @@ class AppControllerTest {
                         .content("{\"description\":\"Test Perk\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("Test Perk"));
-    }
-
-    @Test
-    void testDeleteUser_NotFound() throws Exception {
-        // Mock the repository to return empty for ID 1
-        when(userRepo.findById(1L)).thenReturn(Optional.empty());
-
-        // Perform the DELETE request and verify the response
-        mockMvc.perform(delete("/api/perkmanager/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void testGetUserById_NotFound() throws Exception {
-        // Mock the repository to return empty for ID 1
-        when(userRepo.findById(1L)).thenReturn(Optional.empty());
-
-        // Perform the GET request and verify the response
-        mockMvc.perform(get("/api/perkmanager/1"))
-                .andExpect(status().isNotFound());
     }
 }

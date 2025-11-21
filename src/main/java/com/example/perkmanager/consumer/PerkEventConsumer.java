@@ -45,13 +45,7 @@ public class PerkEventConsumer {
         log.info("Perk ID: {}, Description: {}, Membership: {}, Product: {}",
                 event.getPerkId(), event.getDescription(), event.getMembership(), event.getProduct());
 
-        // TODO: In production, update read model database/cache
-        // Example:
-        // 1. Insert into read-optimized table (e.g., perk_read_model)
-        // 2. Update Elasticsearch index for search
-        // 3. Update Redis cache for fast access
-        // 4. Trigger notifications to interested users
-
+        // TODO: In production, update read model database/cache (Elasticsearch, Redis, etc.)
         updateSearchIndex(event);
     }
 
@@ -93,10 +87,7 @@ public class PerkEventConsumer {
      */
     private void updateSearchIndex(PerkCreatedEvent event) {
         log.debug("Updating search index for perk {}", event.getPerkId());
-        // In production:
-        // - elasticsearchClient.index(event)
-        // - Allows fast text search on perk descriptions
-        // - Geo-search for location-based perks
+        // TODO: Implement Elasticsearch indexing for fast search
     }
 
     /**
@@ -104,9 +95,6 @@ public class PerkEventConsumer {
      */
     private void updateVoteCountInReadModel(Long perkId, Integer upvotes, Integer downvotes) {
         log.debug("Updating vote counts in read model for perk {}", perkId);
-        // In production:
-        // - Update denormalized read table
-        // - Update Redis cache
-        // - Recalculate rankings/scores
+        // TODO: Update read model and cache with new vote counts
     }
 }

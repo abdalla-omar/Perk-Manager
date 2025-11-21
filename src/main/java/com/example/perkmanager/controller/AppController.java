@@ -4,14 +4,16 @@ import com.example.perkmanager.model.AppUser;
 import com.example.perkmanager.model.Perk;
 import com.example.perkmanager.model.Profile;
 import com.example.perkmanager.repository.PerkRepository;
-import com.example.perkmanager.repository.ProfileRepository;
 import com.example.perkmanager.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/perkmanager")
@@ -19,26 +21,17 @@ public class AppController {
 
     private final UserRepository userRepo;
     private final PerkRepository perkRepo;
-    private final ProfileRepository profileRepo;
 
     @Autowired
     public AppController(UserRepository userRepo,
-                         PerkRepository perkRepo,
-                         ProfileRepository profileRepo) {
+                         PerkRepository perkRepo) {
         this.userRepo = userRepo;
         this.perkRepo = perkRepo;
-        this.profileRepo = profileRepo;
     }
 
     // ---------------------------------------------------------------------
     // Users
     // ---------------------------------------------------------------------
-
-    // GET /api/perkmanager
-    @GetMapping
-    public List<AppUser> getAllUsers() {
-        return (List<AppUser>) userRepo.findAll();
-    }
 
     // POST /api/perkmanager  (create user)
     @PostMapping
@@ -88,7 +81,6 @@ public class AppController {
     // Perks
     // ---------------------------------------------------------------------
 
-    // 🔹 NEW: GET /api/perkmanager/perks  -> all perks (any user)
     @GetMapping("/perks")
     public List<Perk> getAllPerks() {
         return (List<Perk>) perkRepo.findAll();
@@ -123,8 +115,6 @@ public class AppController {
         if (perk.getDownvotes() < 0) perk.setDownvotes(0);
 
         Perk saved = perkRepo.save(perk);
-
-        // Match tests: return 200 OK
         return ResponseEntity.ok(saved);
     }
 
