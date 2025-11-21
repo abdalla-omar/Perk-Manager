@@ -1,5 +1,6 @@
 package com.example.perkmanager.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -9,6 +10,8 @@ public class AppUser {
     private Long id;
 
     private String email;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     //one-to-one relationship with Profile

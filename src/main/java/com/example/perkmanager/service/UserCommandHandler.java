@@ -11,6 +11,7 @@ import com.example.perkmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,13 +28,16 @@ public class UserCommandHandler {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final EventPublisher eventPublisher;
+    private final PasswordEncoder passwordEncoder;
 
     public UserCommandHandler(UserRepository userRepository,
                               ProfileRepository profileRepository,
-                              EventPublisher eventPublisher) {
+                              EventPublisher eventPublisher,
+                              PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.eventPublisher = eventPublisher;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -53,7 +57,9 @@ public class UserCommandHandler {
         // Create user with profile
         AppUser user = new AppUser();
         user.setEmail(command.getEmail());
-        user.setPassword(command.getPassword()); // TODO: Hash password in production
+        // Hash password using BCrypt
+        String hashedPassword = passwordEncoder.encode(command.getPassword());
+        user.setPassword(hashedPassword);
 
         Profile profile = new Profile();
         user.setProfile(profile);

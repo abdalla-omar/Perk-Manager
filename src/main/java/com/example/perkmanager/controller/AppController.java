@@ -8,6 +8,7 @@ import com.example.perkmanager.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,12 +22,15 @@ public class AppController {
 
     private final UserRepository userRepo;
     private final PerkRepository perkRepo;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public AppController(UserRepository userRepo,
-                         PerkRepository perkRepo) {
+                         PerkRepository perkRepo,
+                         PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.perkRepo = perkRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // ---------------------------------------------------------------------
@@ -56,6 +60,10 @@ public class AppController {
                     .body("Email already in use");
         }
 
+        // Hash password before saving
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
+
         // Ensure profile exists
         if (user.getProfile() == null) {
             user.setProfile(new Profile());
@@ -69,11 +77,19 @@ public class AppController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AppUser loginRequest) {
         AppUser user = userRepo.findByEmail(loginRequest.getEmail());
-        if (user == null || !user.getPassword().equals(loginRequest.getPassword())) {
+        if (user == null) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid credentials");
         }
+
+        // Verify password using BCrypt
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid credentials");
+        }
+
         return ResponseEntity.ok(user);
     }
 
