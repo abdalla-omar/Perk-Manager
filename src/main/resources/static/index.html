@@ -9,6 +9,29 @@
 </head>
 <body>
 <div id="messageBox" class="hidden"></div>
+
+<!-- Change Password Modal -->
+<div id="changePasswordModal" class="modal hidden">
+    <div class="modal-content">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+            <label for="currentPassword">Current Password:</label>
+            <input type="password" id="currentPassword" required autocomplete="current-password"><br>
+
+            <label for="newPassword">New Password:</label>
+            <input type="password" id="newPassword" required autocomplete="new-password"><br>
+
+            <label for="confirmPassword">Confirm New Password:</label>
+            <input type="password" id="confirmPassword" required autocomplete="new-password"><br>
+
+            <div class="modal-buttons">
+                <button type="submit">Submit</button>
+                <button type="button" id="cancelChangePassword">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <h1>Perk Manager</h1>
 
 <!-- Login Form -->
@@ -38,6 +61,7 @@
     <h2>Your Profile</h2>
     <header id="logoutBar" class="hidden">
         Logged in as <span id="currentUserEmail"></span>
+        <button id="changePasswordButton" type="button">Change Password</button>
         <button id="logoutButton" type="button">Logout</button>
     </header>
     <h3>Your Memberships</h3>
