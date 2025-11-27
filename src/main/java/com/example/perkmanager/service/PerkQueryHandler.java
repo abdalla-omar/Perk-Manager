@@ -79,20 +79,14 @@ public class PerkQueryHandler {
     public List<PerkReadModel> handle(GetPerksMatchingProfileQuery query) {
         log.info("Handling GetPerksMatchingProfileQuery for user: {}", query.getUserId());
 
-        // Load user and profile
+        // Load user
         AppUser user = userRepository.findById(query.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + query.getUserId()));
 
-        if (user.getProfile() == null || user.getProfile().getMemberships().isEmpty()) {
-            log.warn("User {} has no memberships", query.getUserId());
-            return List.of();
-        }
-
-        // Get all perks and filter by user's memberships
-        return StreamSupport.stream(perkRepository.findAll().spliterator(), false)
-                .filter(perk -> user.getProfile().getMemberships()
-                        .contains(perk.getMembership().name()))
+        // Return the user's perks as PerkReadModels
+        return user.getPerks().stream()
                 .map(PerkReadModel::fromEntity)
                 .collect(Collectors.toList());
     }
+
 }

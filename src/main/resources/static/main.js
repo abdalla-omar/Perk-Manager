@@ -1,8 +1,7 @@
-// Handles user interactions, form submissions, and updates the UI dynamically
-// Updated to work with CQRS API response formats
 $(function() {
     let currentUser = null;
 
+    // --- Utility functions ---
     function getAuthFields() {
         return {
             email: $('#authEmail').val().trim(),
@@ -18,27 +17,24 @@ $(function() {
     function refreshUserData() {
         if (!currentUser) return;
 
-        // CQRS: Get matching perks for user's profile
+        // Get user's matching perks
         api.getMatchingPerks(currentUser.id).then(ui.renderPerks);
-
-        // CQRS: Get user profile with memberships
+        api.getAllPerks().then(perks => ui.renderAllPerks(perks, currentUser));
+        // Get user profile
         api.getProfile(currentUser.id).then(profileData => {
-            ui.renderProfile(profileData.memberships || []);
-            ui.updateMembershipOptions(profileData.memberships || []);
+            const memberships = profileData.memberships || [];
+            ui.renderProfile(memberships);
+            ui.updateMembershipOptions(memberships);
         });
     }
 
     function setCurrentUser(user) {
         currentUser = user;
-
-        // update UI visibility + email
         ui.setAuthUI(!!user);
         ui.setCurrentUserEmail(user ? user.email : null);
 
-        if (user) {
-            refreshUserData();
-        } else {
-            // clear user-specific sections
+        if (user) refreshUserData();
+        else {
             $('#userProfile').empty();
             $('#userPerks').empty();
         }
@@ -60,46 +56,38 @@ $(function() {
 
         api.login(creds)
             .then(user => {
-                alert(`Logged in as ${user.email}`);
-                setCurrentUser(user);
+                const normalizedUser = { id: user.id || user.userId, email: user.email };
+                alert(`Logged in as ${normalizedUser.email}`);
+                setCurrentUser(normalizedUser);
                 clearAuthFields();
             })
             .catch(xhr => {
                 alert('Login failed: ' + xhr.responseText);
             });
+
     });
 
-    // Sign up using shared fields
+
+
+    // --- Sign up ---
     $('#signupButton').click(function () {
         const data = getAuthFields();
-
-        if (!data.email || !data.password) {
-            alert("Enter email and password to sign up.");
-            return;
-        }
+        if (!data.email || !data.password) return alert("Enter email and password.");
 
         api.createUser(data)
             .then(userProfile => {
-                // CQRS returns UserProfileReadModel: { userId, email, profileId, memberships }
-                const user = {
-                    id: userProfile.userId,
-                    email: userProfile.email
-                };
+                const user = { id: userProfile.userId, email: userProfile.email };
                 clearAuthFields();
                 api.getUsers().then(ui.renderUsers);
                 setCurrentUser(user);
             })
-            .catch(xhr => {
-                alert('Sign up failed: ' + xhr.responseText);
-            });
+            .catch(xhr => alert('Sign up failed: ' + xhr.responseText));
     });
 
-    // Logout
-    $('#logoutButton').click(function() {
-        setCurrentUser(null);
-    });
+    // --- Logout ---
+    $('#logoutButton').click(() => setCurrentUser(null));
 
-    // Create perk
+    // --- Create Perk ---
     $('#createPerkForm').submit(function(e) {
         e.preventDefault();
         if (!currentUser) return alert('Please log in first.');
@@ -112,23 +100,23 @@ $(function() {
             endDate: $('#perkEndDate').val()
         };
 
-        api.createPerk(currentUser.id, perk).then((createdPerk) => {
-            // CQRS returns PerkReadModel with additional computed fields
-            console.log('Perk created:', createdPerk);
-            alert(`Perk created! Net Score: ${createdPerk.netScore}, Active: ${createdPerk.active}`);
+        api.createPerk(currentUser.id, perk)
+            .then(createdPerk => {
+                alert(`Perk created! Net Score: ${createdPerk.netScore}, Active: ${createdPerk.active}`);
+                $('#createPerkForm')[0].reset();
 
-            this.reset();
+                // Refresh perks safely
 
-            // Refresh both matching perks and the global list
-            api.getMatchingPerks(currentUser.id).then(ui.renderPerks);
-            api.getAllPerks().then(ui.renderAllPerks);
-        }).catch(err => {
-            console.error('Error creating perk:', err);
-            alert('Failed to create perk: ' + (err.responseJSON?.message || err.responseText || 'Unknown error'));
-        });
+                api.getAllPerks().then(perks => ui.renderAllPerks(perks, currentUser));
+                api.getMatchingPerks(currentUser.id).then(ui.renderPerks);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to create perk: ' + (err.responseJSON?.message || err.responseText || 'Unknown error'));
+            });
     });
 
-    // Add membership to profile
+    // --- Add Membership ---
     $('#addMembershipForm').submit(function(e) {
         e.preventDefault();
         if (!currentUser) return alert('Please log in first.');
@@ -136,45 +124,30 @@ $(function() {
         const membership = $('#membershipSelect').val().trim();
         if (!membership) return;
 
-        api.addMembership(currentUser.id, membership).then(() => {
-            alert(`Membership ${membership} added! (Event published to Kafka)`);
-            this.reset();
-
-            // Refresh profile
-            api.getProfile(currentUser.id).then(profileData => {
-                ui.renderProfile(profileData.memberships || []);
-                ui.updateMembershipOptions(profileData.memberships || []);
+        api.addMembership(currentUser.id, membership)
+            .then(() => {
+                alert(`Membership ${membership} added!`);
+                $('#addMembershipForm')[0].reset();
+                refreshUserData();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to add membership: ' + (err.responseText || err.statusText || 'Unknown error'));
             });
-
-            // Refresh matching perks (now that profile changed)
-            api.getMatchingPerks(currentUser.id).then(ui.renderPerks);
-        }).catch(err => {
-            console.error('Error adding membership:', err);
-            const errorMsg = err.responseText || err.statusText || 'Unknown error';
-            alert('Failed to add membership: ' + errorMsg);
-        });
     });
 
-    // Add button to show perks sorted by votes (CQRS feature!)
+    // --- Show top perks ---
     $('#showTopPerks').click(function() {
-        api.getPerksByVotes().then(perks => {
-            console.log('Top perks by votes:', perks);
-            ui.renderAllPerks(perks);
-        });
+        api.getPerksByVotes().then(perks => ui.renderAllPerks(perks, currentUser));
     });
 
-    // Change Password button - show modal
-    $('#changePasswordButton').click(function() {
-        $('#changePasswordModal').removeClass('hidden');
-    });
-
-    // Cancel button - hide modal
-    $('#cancelChangePassword').click(function() {
+    // --- Change password ---
+    $('#changePasswordButton').click(() => $('#changePasswordModal').removeClass('hidden'));
+    $('#cancelChangePassword').click(() => {
         $('#changePasswordModal').addClass('hidden');
         $('#changePasswordForm')[0].reset();
     });
 
-    // Change password form submission
     $('#changePasswordForm').submit(function(e) {
         e.preventDefault();
         if (!currentUser) return alert('Please log in first.');
@@ -183,37 +156,17 @@ $(function() {
         const newPassword = $('#newPassword').val().trim();
         const confirmPassword = $('#confirmPassword').val().trim();
 
-        // Validation
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            alert('All fields are required.');
-            return;
-        }
+        if (!currentPassword || !newPassword || !confirmPassword) return alert('All fields are required.');
+        if (newPassword !== confirmPassword) return alert('New password and confirmation do not match.');
+        if (currentPassword === newPassword) return alert('New password must be different.');
 
-        if (newPassword !== confirmPassword) {
-            alert('New password and confirmation do not match.');
-            return;
-        }
-
-        if (currentPassword === newPassword) {
-            alert('New password must be different from current password.');
-            return;
-        }
-
-        // Call API
         api.changePassword(currentUser.id, currentPassword, newPassword)
-            .then(response => {
-                alert('Password changed successfully! Redirecting to home page...');
+            .then(() => {
+                alert('Password changed successfully! Redirecting...');
                 $('#changePasswordModal').addClass('hidden');
                 $('#changePasswordForm')[0].reset();
-
-                // Redirect after 2 seconds
-                setTimeout(() => {
-                    setCurrentUser(null);
-                }, 2000);
+                setTimeout(() => setCurrentUser(null), 2000);
             })
-            .catch(xhr => {
-                const errorMsg = xhr.responseText || 'Failed to change password';
-                alert('Error: ' + errorMsg);
-            });
+            .catch(xhr => alert('Error: ' + (xhr.responseText || 'Failed to change password')));
     });
 });

@@ -68,6 +68,39 @@ const api = {
         dataType: 'json'
     }),
 
+    // Add perk to user (fixed version)
+    // In api object
+    addPerkToUser: (userId, perkId) => {
+        if (!perkId) {
+            return $.Deferred().reject({
+                responseText: 'Missing perkId'
+            }).promise();
+        }
+        if (!userId) {
+            return $.Deferred().reject({
+                responseText: 'Missing userId'
+            }).promise();
+        }
+
+        return $.ajax({
+            url: `/api/cqrs/users/${encodeURIComponent(userId)}/perks/${encodeURIComponent(perkId)}`,
+            method: 'POST',
+            contentType: 'application/json',
+            dataType: 'text',
+            // include a request body (some servers expect JSON payload even for relationship adds)
+            data: JSON.stringify({
+                userId: userId,
+                perkId: perkId
+            }),
+            headers: {
+                // optional — include auth header if your server uses JWT or similar
+                'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+            }
+        });
+    }
+    ,
+
+
     // Query: Get user profile
     getProfile: (id) => $.ajax({
         url: `/api/cqrs/users/${id}/profile`,

@@ -72,6 +72,18 @@ public class CqrsController {
         }
     }
 
+    @PostMapping("/users/{userId}/perks/{perkId}")
+    public ResponseEntity<?> addPerkToUser(@PathVariable Long userId, @PathVariable Long perkId) {
+        try {
+            log.info("Received AddPerkToUserCommand for user: {}, perk: {}", userId, perkId);
+            AddPerkCommand command = new AddPerkCommand(userId, perkId);
+            userCommandHandler.handle(command);
+            return ResponseEntity.ok("Perk added to user successfully");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     /**
      * Command: Create Perk
      * POST /api/cqrs/perks
