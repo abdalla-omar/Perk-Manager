@@ -88,16 +88,17 @@ public class PerkQueryHandler {
             return Map.of(); // Return empty map if no memberships
         }
 
-        // Get all perks and filter by user's memberships
+        // Get all perks
         Set<Perk> allPerks = StreamSupport.stream(perkRepository.findAll().spliterator(), false)
-                .collect(Collectors.toSet()); // Use Set to avoid duplicates
-
-        Set<Perk> userPerks = allPerks.stream()
-                .filter(perk -> user.getProfile().getMemberships()
-                        .contains(perk.getMembership().name()))
                 .collect(Collectors.toSet());
 
-        // Categorize perks by membership
+        // Filter perks for "Your Perks" list (perks posted by the user)
+        List<PerkReadModel> userPerks = perkRepository.findByPostedBy(user)
+                .stream()
+                .map(PerkReadModel::fromEntity)
+                .collect(Collectors.toList());
+
+        // Categorize perks by membership for "All Perks"
         Map<String, List<PerkReadModel>> categorizedPerks = new HashMap<>();
         allPerks.forEach(perk -> {
             String membership = perk.getMembership().name();
@@ -106,9 +107,8 @@ public class PerkQueryHandler {
                     .add(PerkReadModel.fromEntity(perk));
         });
 
-        // Remove duplicates between "your perks" and "all perks"
-        userPerks.forEach(perk -> categorizedPerks.get(perk.getMembership().name())
-                .removeIf(p -> p.getId().equals(perk.getId())));
+        // Add "Your Perks" list to the map
+        categorizedPerks.put("Your Perks", userPerks);
 
         return categorizedPerks;
     }
