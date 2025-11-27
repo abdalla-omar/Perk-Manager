@@ -76,7 +76,7 @@ public class PerkQueryHandler {
      * Handle GetPerksMatchingProfileQuery
      * Returns perks that match user's memberships (personalized)
      */
-    public Map<String, List<PerkReadModel>> handle(GetPerksMatchingProfileQuery query) {
+    public Map<String, Set<PerkReadModel>> handle(GetPerksMatchingProfileQuery query) {
         log.info("Handling GetPerksMatchingProfileQuery for user: {}", query.getUserId());
 
         // Load user and profile
@@ -93,17 +93,17 @@ public class PerkQueryHandler {
                 .collect(Collectors.toSet());
 
         // Filter perks for "Your Perks" list (perks posted by the user)
-        List<PerkReadModel> userPerks = perkRepository.findByPostedBy(user)
+        Set<PerkReadModel> userPerks = perkRepository.findByPostedBy(user)
                 .stream()
                 .map(PerkReadModel::fromEntity)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         // Categorize perks by membership for "All Perks"
-        Map<String, List<PerkReadModel>> categorizedPerks = new HashMap<>();
+        Map<String, Set<PerkReadModel>> categorizedPerks = new HashMap<>();
         allPerks.forEach(perk -> {
             String membership = perk.getMembership().name();
             categorizedPerks
-                    .computeIfAbsent(membership, k -> new ArrayList<>())
+                    .computeIfAbsent(membership, k -> new HashSet<>())
                     .add(PerkReadModel.fromEntity(perk));
         });
 
