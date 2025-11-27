@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -76,7 +76,7 @@ public class PerkQueryHandler {
      * Handle GetPerksMatchingProfileQuery
      * Returns perks that match user's memberships (personalized)
      */
-    public List<PerkReadModel> handle(GetPerksMatchingProfileQuery query) {
+    public Map<String, List<PerkReadModel>> handle(GetPerksMatchingProfileQuery query) {
         log.info("Handling GetPerksMatchingProfileQuery for user: {}", query.getUserId());
 
         // Load user and profile
@@ -85,14 +85,31 @@ public class PerkQueryHandler {
 
         if (user.getProfile() == null || user.getProfile().getMemberships().isEmpty()) {
             log.warn("User {} has no memberships", query.getUserId());
-            return List.of();
+            return Map.of(); // Return empty map if no memberships
         }
 
         // Get all perks and filter by user's memberships
-        return StreamSupport.stream(perkRepository.findAll().spliterator(), false)
+        Set<Perk> allPerks = StreamSupport.stream(perkRepository.findAll().spliterator(), false)
+                .collect(Collectors.toSet()); // Use Set to avoid duplicates
+
+        Set<Perk> userPerks = allPerks.stream()
                 .filter(perk -> user.getProfile().getMemberships()
                         .contains(perk.getMembership().name()))
-                .map(PerkReadModel::fromEntity)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
+
+        // Categorize perks by membership
+        Map<String, List<PerkReadModel>> categorizedPerks = new HashMap<>();
+        allPerks.forEach(perk -> {
+            String membership = perk.getMembership().name();
+            categorizedPerks
+                    .computeIfAbsent(membership, k -> new ArrayList<>())
+                    .add(PerkReadModel.fromEntity(perk));
+        });
+
+        // Remove duplicates between "your perks" and "all perks"
+        userPerks.forEach(perk -> categorizedPerks.get(perk.getMembership().name())
+                .removeIf(p -> p.getId().equals(perk.getId())));
+
+        return categorizedPerks;
     }
 }
