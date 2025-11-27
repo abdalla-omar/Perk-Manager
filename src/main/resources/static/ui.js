@@ -7,14 +7,6 @@ const ui = {
         users.forEach(u => $list.append(`<li>ID: ${u.id} - ${u.email}</li>`));
     },
 
-    showMessage: (msg, type) => {
-        const $box = $('#messageBox');
-        $box.text(msg);
-        $box.removeClass().addClass(type).fadeIn();
-
-        setTimeout(() => $box.fadeOut(), 1500);
-    },
-
     // Your perks (for current user - shows matching perks from CQRS)
     renderPerks: (perks) => {
         const $list = $('#userPerks').empty();
@@ -100,14 +92,19 @@ const ui = {
                     .catch(err => alert('Failed to downvote perk.'));
             }).appendTo($li);
 
-            // Add perk button (only for currentUser)
-            if (currentUser) {
+            //Only show the add perk button if the user doesn't own the perk already
+            if (currentUser && !(currentUser.perks || []).includes(p.id)) {
                 $('<button type="button">Add Perk</button>').click(() => {
                     api.addPerkToUser(currentUser.id, p.id)
                         .then(() => {
                             alert('Perk added to your profile!');
-                            // Refresh only the current user's perks
-                            api.getMatchingPerks(currentUser.id).then(ui.renderPerks);
+                            //Refresh the current user's perks
+                            api.getMatchingPerks(currentUser.id).then(perks => {
+                                ui.renderPerks(perks);
+                                currentUser.perks = perks.map(perk => perk.id);
+                                //Re-render all perks to remove Add button for this perk
+                                api.getAllPerks().then(perks => ui.renderAllPerks(perks, currentUser));
+                            });
                         })
                         .catch(err => alert('Failed to add perk: ' + (err.responseText || err)));
                 }).appendTo($li);

@@ -145,6 +145,11 @@ public class UserCommandHandler {
         Perk perk = perkRepository.findById(command.getPerkId())
                 .orElseThrow(() -> new IllegalArgumentException("Perk not found: " + command.getPerkId()));
 
+        Profile profile = user.getProfile();
+        if (profile == null || !profile.getMemberships().contains(perk.getMembership().toString())) {
+            throw new IllegalArgumentException("User does not have required membership: " + perk.getMembership());
+        }
+
         user.getPerks().add(perk);
         System.out.println("User perks after addition: " + user.getPerks());
         System.out.println("\nSize of user perks: " + user.getPerks().size());

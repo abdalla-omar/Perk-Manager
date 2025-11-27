@@ -83,23 +83,16 @@ const api = {
         }
 
         return $.ajax({
-            url: `/api/cqrs/users/${encodeURIComponent(userId)}/perks/${encodeURIComponent(perkId)}`,
+            url: `/api/cqrs/users/${userId}/perks/${perkId}`,
             method: 'POST',
             contentType: 'application/json',
             dataType: 'text',
-            // include a request body (some servers expect JSON payload even for relationship adds)
             data: JSON.stringify({
                 userId: userId,
                 perkId: perkId
             }),
-            headers: {
-                // optional — include auth header if your server uses JWT or similar
-                'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
-            }
         });
-    }
-    ,
-
+    },
 
     // Query: Get user profile
     getProfile: (id) => $.ajax({

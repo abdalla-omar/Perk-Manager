@@ -33,12 +33,29 @@ $(function() {
         ui.setAuthUI(!!user);
         ui.setCurrentUserEmail(user ? user.email : null);
 
-        if (user) refreshUserData();
-        else {
+        if (user) {
+            // Fetch user's perks and store them in currentUser.perks
+            api.getMatchingPerks(user.id).then(perks => {
+                currentUser.perks = perks.map(p => p.id); // save perk IDs
+                ui.renderPerks(perks);
+
+                // Also fetch all perks for rendering
+                api.getAllPerks().then(allPerks => ui.renderAllPerks(allPerks, currentUser));
+            });
+
+            // Fetch user profile (memberships, etc.)
+            api.getProfile(user.id).then(profileData => {
+                const memberships = profileData.memberships || [];
+                ui.renderProfile(memberships);
+                ui.updateMembershipOptions(memberships);
+            });
+
+        } else {
             $('#userProfile').empty();
             $('#userPerks').empty();
         }
     }
+
 
     // Initial load
     api.getUsers().then(ui.renderUsers);
@@ -105,8 +122,10 @@ $(function() {
                 alert(`Perk created! Net Score: ${createdPerk.netScore}, Active: ${createdPerk.active}`);
                 $('#createPerkForm')[0].reset();
 
-                // Refresh perks safely
-
+                //Add the newly created perk to currentUser.perks
+                if (!currentUser.perks) currentUser.perks = [];
+                currentUser.perks.push(createdPerk.id);
+                //Refresh the perks display
                 api.getAllPerks().then(perks => ui.renderAllPerks(perks, currentUser));
                 api.getMatchingPerks(currentUser.id).then(ui.renderPerks);
             })
