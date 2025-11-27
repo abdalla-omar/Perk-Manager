@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -195,7 +196,17 @@ public class CqrsController {
         try {
             log.info("Received GetPerksMatchingProfileQuery for user: {}", userId);
             GetPerksMatchingProfileQuery query = new GetPerksMatchingProfileQuery(userId);
-            Map<String, List<PerkReadModel>> categorizedPerks = perkQueryHandler.handle(query);
+
+            // Retrieve the map with Set values
+            Map<String, Set<PerkReadModel>> categorizedPerksSet = perkQueryHandler.handle(query);
+
+            // Convert Set values to List values
+            Map<String, List<PerkReadModel>> categorizedPerks = categorizedPerksSet.entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> List.copyOf(entry.getValue())
+                    ));
 
             // Flatten the map into a single list
             List<PerkReadModel> perks = categorizedPerks.values()
