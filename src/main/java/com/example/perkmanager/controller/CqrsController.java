@@ -105,10 +105,11 @@ public class CqrsController {
      * POST /api/cqrs/perks/{perkId}/upvote
      */
     @PostMapping("/perks/{perkId}/upvote")
-    public ResponseEntity<?> upvotePerk(@PathVariable Long perkId) {
+    public ResponseEntity<?> upvotePerk(@PathVariable Long perkId,
+                                        @RequestParam Long userId) {
         try {
-            log.info("Received UpvotePerkCommand for perk: {}", perkId);
-            UpvotePerkCommand command = new UpvotePerkCommand(perkId);
+            log.info("Received UpvotePerkCommand for perk: {}, user: {}", perkId, userId);
+            UpvotePerkCommand command = new UpvotePerkCommand(perkId, userId);
             Perk perk = perkCommandHandler.handle(command);
             return ResponseEntity.ok(PerkReadModel.fromEntity(perk));
         } catch (IllegalArgumentException e) {
@@ -121,10 +122,11 @@ public class CqrsController {
      * POST /api/cqrs/perks/{perkId}/downvote
      */
     @PostMapping("/perks/{perkId}/downvote")
-    public ResponseEntity<?> downvotePerk(@PathVariable Long perkId) {
+    public ResponseEntity<?> downvotePerk(@PathVariable Long perkId,
+                                          @RequestParam Long userId) {
         try {
-            log.info("Received DownvotePerkCommand for perk: {}", perkId);
-            DownvotePerkCommand command = new DownvotePerkCommand(perkId);
+            log.info("Received DownvotePerkCommand for perk: {}, user: {}", perkId, userId);
+            DownvotePerkCommand command = new DownvotePerkCommand(perkId, userId);
             Perk perk = perkCommandHandler.handle(command);
             return ResponseEntity.ok(PerkReadModel.fromEntity(perk));
         } catch (IllegalArgumentException e) {

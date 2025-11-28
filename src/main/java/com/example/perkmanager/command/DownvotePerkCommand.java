@@ -11,10 +11,15 @@ public class DownvotePerkCommand {
     @NotNull(message = "Perk ID is required")
     private Long perkId;
 
+    @NotNull(message = "User ID is required")
+    private Long userId;
+
+
     public DownvotePerkCommand() {}
 
-    public DownvotePerkCommand(Long perkId) {
+    public DownvotePerkCommand(Long perkId, Long userId) {
         this.perkId = perkId;
+        this.userId = userId;
     }
 
     public Long getPerkId() {
@@ -24,4 +29,7 @@ public class DownvotePerkCommand {
     public void setPerkId(Long perkId) {
         this.perkId = perkId;
     }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }
