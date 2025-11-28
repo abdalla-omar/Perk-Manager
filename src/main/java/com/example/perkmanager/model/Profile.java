@@ -13,20 +13,14 @@ public class Profile {
 
     // List of memberships: Air Miles, CAA, Visa, etc.
     @ElementCollection
+    @CollectionTable(name = "profile_membership", joinColumns = @JoinColumn(name = "profile_id"))
+    @Column(name = "membership")
     private Set<String> memberships = new HashSet<>();
 
     public Profile() {}
 
-    public boolean hasMembership(String membership) {
-        return memberships.contains(membership);
-    }
-
     public void addMembership(String membership) {
         memberships.add(membership);
-    }
-
-    public void removeMembership(String membership) {
-        memberships.remove(membership);
     }
 
     public Long getId() {

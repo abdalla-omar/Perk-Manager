@@ -1,0 +1,75 @@
+classDiagram
+    class AppUser {
+        -Long id
+        -String email
+        -String password
+        -Profile profile
+        +AppUser()
+        +AppUser(String email, String password)
+        +Long getId()
+        +String getEmail()
+        +void setEmail(String email)
+        +String getPassword()
+        +void setPassword(String password)
+        +Profile getProfile()
+        +void setProfile(Profile profile)
+    }
+
+    class Profile {
+        -Long id
+        -Set~String~ memberships
+        +Profile()
+        +boolean hasMembership(String membership)
+        +void addMembership(String membership)
+        +void removeMembership(String membership)
+        +Long getId()
+        +Set~String~ getMemberships()
+    }
+
+    class Perk {
+        -Long id
+        -String description
+        -MembershipType membership
+        -ProductType product
+        -int upvotes
+        -int downvotes
+        -LocalDate startDate
+        -LocalDate endDate
+        -AppUser postedBy
+        +Perk()
+        +Perk(String, MembershipType, ProductType, LocalDate, LocalDate, AppUser)
+        +void upvote()
+        +void downvote()
+        +Long getId()
+        +String getDescription()
+        +MembershipType getMembership()
+        +ProductType getProduct()
+        +int getUpvotes()
+        +int getDownvotes()
+        +LocalDate getStartDate()
+        +LocalDate getEndDate()
+        +AppUser getPostedBy()
+    }
+
+    class MembershipType {
+        <<enumeration>>
+        CAA
+        VISA
+        MASTERCARD
+        AMEX
+        AIRMILES
+    }
+
+    class ProductType {
+        <<enumeration>>
+        MOVIES
+        HOTELS
+        FLIGHTS
+        CARS
+        DINING
+    }
+
+    AppUser "1" -- "1" Profile : has
+    AppUser "1" -- "0..*" Perk : posts
+    Perk "*" -- "1" MembershipType : uses
+    Perk "*" -- "1" ProductType : categorizes

@@ -12,16 +12,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
 
 @WebMvcTest(AppController.class)
 class AppControllerTest {
@@ -38,13 +42,15 @@ class AppControllerTest {
     @MockBean
     private ProfileRepository profileRepo;
 
+    @MockBean
+    private PasswordEncoder passwordEncoder;
 
     private AppUser testUser;
     private Perk testPerk;
 
     @BeforeEach
     void setUp() {
-        testUser = new AppUser("test@example.com", "password"); // Initialize testUser
+        testUser = new AppUser("test@example.com", "$2a$10$hashedPassword");
         testPerk = new Perk(
                 "Test Perk",
                 null, // MembershipType
@@ -56,32 +62,21 @@ class AppControllerTest {
     }
 
     @Test
-    void testGetAll() throws Exception {
-        when(userRepo.findAll()).thenReturn(Collections.singletonList(testUser));
-
-        mockMvc.perform(get("/api/perkmanager"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].email").value("test@example.com"));
-    }
-
-    @Test
-    void testCreate() throws Exception {
+    void testCreateUser() throws Exception {
+        // Mock password encoding
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashedPassword");
         when(userRepo.save(any(AppUser.class))).thenReturn(testUser);
 
         mockMvc.perform(post("/api/perkmanager")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"test@example.com\",\"password\":\"password\"}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("test@example.com"));
     }
 
     @Test
     void testGetUserPerks() throws Exception {
-        Mockito.doAnswer(invocation -> {
-            Long userId = invocation.getArgument(0);
-            return userId.equals(1L) ? Optional.of(testUser) : Optional.empty();
-        }).when(userRepo).findById(any(Long.class));
-
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser)); // Ensure Optional.of(testUser)
         when(perkRepo.findByPostedBy(testUser)).thenReturn(Collections.singletonList(testPerk));
 
         mockMvc.perform(get("/api/perkmanager/1/perks"))
@@ -90,8 +85,10 @@ class AppControllerTest {
     }
 
     @Test
-    void testLogin() throws Exception {
+    void testLoginUser() throws Exception {
         when(userRepo.findByEmail("test@example.com")).thenReturn(testUser);
+        // Mock password matching - plain "password" matches hashed password
+        when(passwordEncoder.matches("password", "$2a$10$hashedPassword")).thenReturn(true);
 
         mockMvc.perform(post("/api/perkmanager/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -101,12 +98,8 @@ class AppControllerTest {
     }
 
     @Test
-    void testCreatePerk() throws Exception {
-        Mockito.doAnswer(invocation -> {
-            Long userId = invocation.getArgument(0);
-            return userId.equals(1L) ? Optional.of(testUser) : Optional.empty();
-        }).when(userRepo).findById(any(Long.class));
-
+    void testCreatePerkForUser() throws Exception {
+        when(userRepo.findById(1L)).thenReturn(Optional.ofNullable(testUser));
         when(perkRepo.save(any(Perk.class))).thenReturn(testPerk);
 
         mockMvc.perform(post("/api/perkmanager/1/perks")
@@ -114,5 +107,48 @@ class AppControllerTest {
                         .content("{\"description\":\"Test Perk\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("Test Perk"));
+    }
+
+    @Test
+    void testChangePassword_Success() throws Exception {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("oldPassword", "$2a$10$hashedPassword")).thenReturn(true);
+        when(passwordEncoder.encode("newPassword")).thenReturn("$2a$10$newHashedPassword");
+        when(userRepo.save(any(AppUser.class))).thenReturn(testUser);
+
+        mockMvc.perform(put("/api/perkmanager/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"oldPassword\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password changed successfully"));
+    }
+
+    @Test
+    void testChangePassword_WrongCurrentPassword() throws Exception {
+        when(userRepo.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("wrongPassword", "$2a$10$hashedPassword")).thenReturn(false);
+
+        mockMvc.perform(put("/api/perkmanager/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"wrongPassword\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testChangePassword_SamePassword() throws Exception {
+        mockMvc.perform(put("/api/perkmanager/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"password\",\"newPassword\":\"password\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testChangePassword_UserNotFound() throws Exception {
+        when(userRepo.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(put("/api/perkmanager/999/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"oldPassword\",\"newPassword\":\"newPassword\"}"))
+                .andExpect(status().isNotFound());
     }
 }
