@@ -37,6 +37,9 @@ public class EventPublisher {
     @Value("${kafka.topic.membership-added}")
     private String membershipAddedTopic;
 
+    @Value("perk.adeed")
+    private String perkAddedTopic;
+
     public EventPublisher(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
@@ -80,6 +83,11 @@ public class EventPublisher {
     public void publishMembershipAdded(MembershipAddedEvent event) {
         String key = String.valueOf(event.getUserId());
         publish(membershipAddedTopic, key, event, "MembershipAdded");
+    }
+
+    public void publishPerkAdded(PerkAddedEvent event) {
+        String key = String.valueOf(event.getUserId());
+        publish(perkAddedTopic, key, event, "PerkAdded");
     }
 
     /**

@@ -1,11 +1,15 @@
 package com.example.perkmanager.service;
 
 import com.example.perkmanager.command.AddMembershipCommand;
+import com.example.perkmanager.command.AddPerkCommand;
 import com.example.perkmanager.command.CreateUserCommand;
 import com.example.perkmanager.event.MembershipAddedEvent;
+import com.example.perkmanager.event.PerkAddedEvent;
 import com.example.perkmanager.event.UserRegisteredEvent;
 import com.example.perkmanager.model.AppUser;
+import com.example.perkmanager.model.Perk;
 import com.example.perkmanager.model.Profile;
+import com.example.perkmanager.repository.PerkRepository;
 import com.example.perkmanager.repository.ProfileRepository;
 import com.example.perkmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -27,17 +31,19 @@ public class UserCommandHandler {
 
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
+    private final PerkRepository perkRepository;
     private final EventPublisher eventPublisher;
     private final PasswordEncoder passwordEncoder;
 
     public UserCommandHandler(UserRepository userRepository,
                               ProfileRepository profileRepository,
                               EventPublisher eventPublisher,
-                              PasswordEncoder passwordEncoder) {
+                              PasswordEncoder passwordEncoder, PerkRepository perkRepository) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.eventPublisher = eventPublisher;
         this.passwordEncoder = passwordEncoder;
+        this.perkRepository = perkRepository;
     }
 
     /**
@@ -119,5 +125,46 @@ public class UserCommandHandler {
         eventPublisher.publishMembershipAdded(event);
 
         return savedProfile;
+    }
+
+    /**
+     * Handle AddPerkCommand
+     * Adds a perk to the user's list of perks and publishes PerkAddedEvent
+     */
+    @Transactional
+    public AppUser handle(AddPerkCommand command) {
+        log.info("Handling AddPerkCommand for user {}: perk {}",
+                command.getUserId(), command.getPerkId());
+
+        // Load user
+        AppUser user = userRepository.findById(command.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + command.getUserId()));
+
+
+        // Add perk (store perkId, not full object)
+        Perk perk = perkRepository.findById(command.getPerkId())
+                .orElseThrow(() -> new IllegalArgumentException("Perk not found: " + command.getPerkId()));
+
+        Profile profile = user.getProfile();
+        if (profile == null || !profile.getMemberships().contains(perk.getMembership().toString())) {
+            throw new IllegalArgumentException("User does not have required membership: " + perk.getMembership());
+        }
+
+        user.getPerks().add(perk);
+        System.out.println("User perks after addition: " + user.getPerks());
+        System.out.println("\nSize of user perks: " + user.getPerks().size());
+
+        // Save updated user
+        AppUser savedUser = userRepository.save(user);
+        log.info("Added perk {} to user {}", command.getPerkId(), command.getUserId());
+
+        // Publish event
+        PerkAddedEvent event = new PerkAddedEvent(
+                savedUser.getId(),
+                perk
+        );
+        eventPublisher.publishPerkAdded(event);
+
+        return savedUser;
     }
 }

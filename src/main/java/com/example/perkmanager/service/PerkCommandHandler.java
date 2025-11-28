@@ -59,7 +59,9 @@ public class PerkCommandHandler {
                 command.getEndDate(),
                 user
         );
-
+        user.addPerk(perk);
+        System.out.println("User perks after adding new perk: " + user.getPerks());
+        System.out.println("Size of user perk list: " + user.getPerks().size());
         // Save to write database
         Perk savedPerk = perkRepository.save(perk);
         log.info("Created perk with ID: {}", savedPerk.getId());

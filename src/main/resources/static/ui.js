@@ -7,14 +7,6 @@ const ui = {
         users.forEach(u => $list.append(`<li>ID: ${u.id} - ${u.email}</li>`));
     },
 
-    showMessage : (msg, type) => {
-        const $box = $('#messageBox');
-        $box.text(msg);
-        $box.removeClass().addClass(type).fadeIn();
-
-        setTimeout(() => $box.fadeOut(), 1500);
-    },
-
     // Your perks (for current user - shows matching perks from CQRS)
     renderPerks: (perks) => {
         const $list = $('#userPerks').empty();
@@ -69,14 +61,13 @@ const ui = {
     },
 
     // All perks (from everyone) - using CQRS Read Model
-    renderAllPerks: (perks) => {
+    renderAllPerks: (perks, currentUser) => {
         const $list = $('#allPerks').empty();
         if (!perks.length) return $list.append('<li>No perks available.</li>');
 
         perks.forEach(p => {
             const $li = $('<li>');
 
-            // CQRS Read Model has postedByEmail instead of nested object
             const postedBy = p.postedByEmail || 'Unknown user';
             const activeStatus = p.active ? '✓ Active' : '✗ Inactive';
 
@@ -88,42 +79,42 @@ const ui = {
             $li.append($count);
 
             // Upvote button
-            const $upBtn = $('<button type="button">👍</button>');
-            $upBtn.click(() => {
+            $('<button type="button">👍</button>').click(() => {
                 api.upvotePerk(p.id)
-                    .then(updated => {
-                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
-                        // Show that event was published
-                        console.log('✓ PerkUpvotedEvent published to Kafka topic: perk.upvoted');
-                    })
-                    .catch(err => {
-                        console.error('Error upvoting perk:', err);
-                        alert('Failed to upvote perk.');
-                    });
-            });
+                    .then(updated => $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`))
+                    .catch(err => alert('Failed to upvote perk.'));
+            }).appendTo($li);
 
             // Downvote button
-            const $downBtn = $('<button type="button">👎</button>');
-            $downBtn.click(() => {
+            $('<button type="button">👎</button>').click(() => {
                 api.downvotePerk(p.id)
-                    .then(updated => {
-                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
-                        console.log('✓ PerkDownvotedEvent published to Kafka topic: perk.downvoted');
-                    })
-                    .catch(err => {
-                        console.error('Error downvoting perk:', err);
-                        alert('Failed to downvote perk.');
-                    });
-            });
+                    .then(updated => $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`))
+                    .catch(err => alert('Failed to downvote perk.'));
+            }).appendTo($li);
 
-            $li.append(' ');
-            $li.append($upBtn);
-            $li.append(' ');
-            $li.append($downBtn);
+            //Only show the add perk button if the user doesn't own the perk already
+            if (currentUser && !(currentUser.perks || []).includes(p.id)) {
+                $('<button type="button">Add Perk</button>').click(() => {
+                    api.addPerkToUser(currentUser.id, p.id)
+                        .then(() => {
+                            alert('Perk added to your profile!');
+                            //Refresh the current user's perks
+                            api.getMatchingPerks(currentUser.id).then(perks => {
+                                ui.renderPerks(perks);
+                                currentUser.perks = perks.map(perk => perk.id);
+                                //Re-render all perks to remove Add button for this perk
+                                api.getAllPerks().then(perks => ui.renderAllPerks(perks, currentUser));
+                            });
+                        })
+                        .catch(err => alert('Failed to add perk: ' + (err.responseText || err)));
+                }).appendTo($li);
+            }
 
             $list.append($li);
         });
     },
+
+
 
     renderProfile: (memberships) => {
         const $list = $('#userProfile').empty();
