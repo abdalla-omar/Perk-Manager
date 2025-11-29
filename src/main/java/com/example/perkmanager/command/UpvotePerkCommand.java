@@ -16,6 +16,8 @@ public class UpvotePerkCommand {
 
     public UpvotePerkCommand() {}
 
+
+
     public UpvotePerkCommand(Long perkId, Long userId) {
 
         this.perkId = perkId;
