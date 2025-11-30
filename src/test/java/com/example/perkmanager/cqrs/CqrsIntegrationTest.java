@@ -132,15 +132,15 @@ public class CqrsIntegrationTest {
         );
         Perk perk = perkCommandHandler.handle(perkCommand);
 
-        // When: Upvote command is handled multiple times
-        UpvotePerkCommand upvoteCommand = new UpvotePerkCommand(perk.getId());
-        perkCommandHandler.handle(upvoteCommand);
-        perkCommandHandler.handle(upvoteCommand);
-        perkCommandHandler.handle(upvoteCommand);
+        // When: the same user upvotes multiple times
+        UpvotePerkCommand upvoteCommand = new UpvotePerkCommand(perk.getId(), user.getId());
+        perkCommandHandler.handle(upvoteCommand); // 1st click -> +1
+        perkCommandHandler.handle(upvoteCommand); // 2nd click -> toggle/remove
+        perkCommandHandler.handle(upvoteCommand); // 3rd click -> +1 again
 
-        Thread.sleep(100);
+        Thread.sleep(100); // let any async handling settle
 
-        // Then: Vote count is updated
+        // Then: final vote count reflects "toggle" behavior, not +3
         GetPerksByVotesQuery votesQuery = new GetPerksByVotesQuery(true);
         List<PerkReadModel> sortedPerks = perkQueryHandler.handle(votesQuery);
 
@@ -149,9 +149,11 @@ public class CqrsIntegrationTest {
                 .findFirst()
                 .orElseThrow();
 
-        assertEquals(3, topPerk.getUpvotes());
-        assertEquals(3, topPerk.getNetScore());
+        // With toggle logic, final upvotes should be 1, netScore should also be 1
+        assertEquals(1, topPerk.getUpvotes());
+        assertEquals(1, topPerk.getNetScore());
     }
+
 
     @Test
     public void testCommandValidation() {

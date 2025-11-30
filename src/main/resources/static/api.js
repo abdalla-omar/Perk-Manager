@@ -111,15 +111,15 @@ const api = {
     }),
 
     // Command: Upvote a perk (publishes event to Kafka!)
-    upvotePerk: (perkId) => $.ajax({
-        url: `/api/cqrs/perks/${perkId}/upvote`,
-        method: 'POST',
-        dataType: 'json'
-    }),
+   upvotePerk: (perkId, userId) => $.ajax({
+       url: `/api/cqrs/perks/${perkId}/upvote?userId=${userId}`,
+       method: 'POST',
+       dataType: 'json'
+   }),
 
     // Command: Downvote a perk (new CQRS feature!)
-    downvotePerk: (perkId) => $.ajax({
-        url: `/api/cqrs/perks/${perkId}/downvote`,
+    downvotePerk: (perkId, userId) => $.ajax({
+        url: `/api/cqrs/perks/${perkId}/downvote?userId=${userId}`,
         method: 'POST',
         dataType: 'json'
     }),
