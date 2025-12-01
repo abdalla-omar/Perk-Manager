@@ -4,6 +4,7 @@ classDiagram
         -String email
         -String password
         -Profile profile
+        -List~Perk~ perks
         +AppUser()
         +AppUser(String email, String password)
         +Long getId()
@@ -13,15 +14,17 @@ classDiagram
         +void setPassword(String password)
         +Profile getProfile()
         +void setProfile(Profile profile)
+        +List~Perk~ getPerks()
+        +void setPerks(List~Perk~ perks)
+        +void addPerk(Perk perk)
+        +void removePerk(Perk perk)
     }
 
     class Profile {
         -Long id
         -Set~String~ memberships
         +Profile()
-        +boolean hasMembership(String membership)
         +void addMembership(String membership)
-        +void removeMembership(String membership)
         +Long getId()
         +Set~String~ getMemberships()
     }
@@ -42,13 +45,36 @@ classDiagram
         +void downvote()
         +Long getId()
         +String getDescription()
+        +void setDescription(String description)
         +MembershipType getMembership()
+        +void setMembership(MembershipType membership)
         +ProductType getProduct()
+        +void setProduct(ProductType product)
         +int getUpvotes()
+        +void setUpvotes(int upvotes)
         +int getDownvotes()
+        +void setDownvotes(int downvotes)
         +LocalDate getStartDate()
+        +void setStartDate(LocalDate startDate)
         +LocalDate getEndDate()
+        +void setEndDate(LocalDate endDate)
         +AppUser getPostedBy()
+        +void setPostedBy(AppUser postedBy)
+        +String toString()
+    }
+
+    class PerkVote {
+        -Long id
+        -AppUser user
+        -Perk perk
+        -VoteType voteType
+        +PerkVote()
+        +PerkVote(AppUser user, Perk perk, VoteType voteType)
+        +Long getId()
+        +AppUser getUser()
+        +Perk getPerk()
+        +VoteType getVoteType()
+        +void setVoteType(VoteType voteType)
     }
 
     class MembershipType {
@@ -69,7 +95,17 @@ classDiagram
         DINING
     }
 
+    class VoteType {
+        <<enumeration>>
+        UPVOTE
+        DOWNVOTE
+    }
+
     AppUser "1" -- "1" Profile : has
     AppUser "1" -- "0..*" Perk : posts
+    AppUser "0..*" -- "0..*" Perk : saves
+    AppUser "1" -- "0..*" PerkVote : casts
+    Perk "1" -- "0..*" PerkVote : receives
     Perk "*" -- "1" MembershipType : uses
     Perk "*" -- "1" ProductType : categorizes
+    PerkVote "*" -- "1" VoteType : has
