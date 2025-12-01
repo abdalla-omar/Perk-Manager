@@ -92,24 +92,39 @@ public class PerkQueryHandler {
         Set<Perk> allPerks = StreamSupport.stream(perkRepository.findAll().spliterator(), false)
                 .collect(Collectors.toSet());
 
-        // Filter perks for "Your Perks" list (perks posted by the user)
-        Set<PerkReadModel> userPerks = perkRepository.findByPostedBy(user)
-                .stream()
+        // Filter perks for "Your Perks" list:
+        // 1. Perks posted by the user
+        // 2. Perks added to the user's profile (user.getPerks())
+        Set<Perk> userOwnedPerks = new HashSet<>();
+        userOwnedPerks.addAll(perkRepository.findByPostedBy(user));
+        userOwnedPerks.addAll(user.getPerks());
+
+        Set<PerkReadModel> userPerks = userOwnedPerks.stream()
                 .map(PerkReadModel::fromEntity)
                 .collect(Collectors.toSet());
 
         // Categorize perks by membership for "All Perks"
         Map<String, Set<PerkReadModel>> categorizedPerks = new HashMap<>();
-        allPerks.forEach(perk -> {
-            String membership = perk.getMembership().name();
-            categorizedPerks
-                    .computeIfAbsent(membership, k -> new HashSet<>())
-                    .add(PerkReadModel.fromEntity(perk));
-        });
+        allPerks.stream()
+                .filter(perk -> !userOwnedPerks.contains(perk))
+                .forEach(perk -> {
+                    String membership = perk.getMembership().name();
+                    categorizedPerks
+                            .computeIfAbsent(membership, k -> new HashSet<>())
+                            .add(PerkReadModel.fromEntity(perk));
+                });
 
         // Add "Your Perks" list to the map
         categorizedPerks.put("Your Perks", userPerks);
 
         return categorizedPerks;
+    }
+
+    public List<PerkReadModel> handle(GetPerksByProductQuery query) {
+        log.info("Handling GetPerksByProductQuery for product: {}", query.getProduct());
+        List<Perk> perks = perkRepository.findByProduct(query.getProduct());
+        return perks.stream()
+                .map(PerkReadModel::fromEntity)
+                .collect(Collectors.toList());
     }
 }

@@ -5,7 +5,7 @@ const api = {
     // ============================================
 
     getUsers: () => $.ajax({
-        url: '/api/perkmanager',
+        url: '/api/perkmanager/users',
         method: 'GET',
         dataType: 'json'
     }),
@@ -48,6 +48,20 @@ const api = {
     // Query: Get personalized perks matching user profile
     getMatchingPerks: (userId) => $.ajax({
         url: `/api/cqrs/users/${userId}/matching-perks`,
+        method: 'GET',
+        dataType: 'json'
+    }),
+
+    // Query: Get perks by membership
+    getPerksByMembership: (membership) => $.ajax({
+        url: `/api/cqrs/perks/by-membership/${membership}`,
+        method: 'GET',
+        dataType: 'json'
+    }),
+
+    // Query: Get perks by product
+    getPerksByProduct: (product) => $.ajax({
+        url: `/api/cqrs/perks/by-product/${product}`,
         method: 'GET',
         dataType: 'json'
     }),

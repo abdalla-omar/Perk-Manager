@@ -1,81 +1,47 @@
 // Renders data and updates the page elements dynamically
 // Updated to work with CQRS Read Models + per-user voting
+const TOAST_TIMEOUT = 3600; // toast display duration in ms
+let toastTimer; // timer for hiding toast
+
 const ui = {
-    renderUsers: (users) => {
+    // Show a temporary toast message for user feedback
+    showToast(message, type = 'info') {
+        const $box = $('#messageBox');
+        $box.text(message).attr('data-type', type).removeClass('hidden');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => $box.addClass('hidden'), TOAST_TIMEOUT);
+    },
+
+    renderUsers(users) {
         const $list = $('#userList').empty();
         if (!users || !users.length) {
-            return $list.append('<li>No users found</li>');
+            return $list.append('<li>No community members yet.</li>');
         }
-        users.forEach(u => $list.append(`<li>ID: ${u.id} - ${u.email}</li>`));
+        users.forEach(user => {
+            const $item = $('<li>').text(user.email || 'Unknown');
+            $list.append($item);
+        });
     },
 
     /**
-     * Your perks (for current user - shows matching perks from CQRS)
-     * perks: array of PerkReadModel
+     * Your perks (perks you own/created)
+     * perkBuckets: object with 'Your Perks' key containing your owned perks
      * currentUser: { id, email, perks? } or undefined
      */
-    renderPerks: (perks, currentUser) => {
-        const $list = $('#userPerks').empty();
-        if (!perks || !perks.length) {
-            return $list.append('<li>No perks available.</li>');
+    renderPerks(perkBuckets, currentUser) {
+        const $grid = $('#userPerks').empty();
+        if (!perkBuckets || typeof perkBuckets !== 'object') {
+            return $grid.append('<p class="empty-state">No perks in your profile yet.</p>');
         }
 
-        const hasValidUser = currentUser && typeof currentUser === 'object' && currentUser.id;
+        const yourPerks = perkBuckets['Your Perks'] || [];
+        const perksArray = Array.isArray(yourPerks) ? yourPerks : [];
 
-        perks.forEach(p => {
-            const $li = $('<li>');
+        if (perksArray.length === 0) {
+            return $grid.append('<p class="empty-state">No perks in your profile yet. Create one or add from All Perks!</p>');
+        }
 
-            // CQRS Read Model includes netScore and active status
-            const activeStatus = p.active ? '✓' : '✗';
-            $li.append(`${p.description} - ${p.product} - ${p.membership} `);
-            $li.append(`<em>(Net: ${p.netScore}, Active: ${activeStatus})</em> `);
-
-            const $count = $(`<span>(↑${p.upvotes} ↓${p.downvotes})</span>`);
-            $li.append($count);
-
-            // Upvote button
-            const $upBtn = $('<button type="button">👍 Upvote</button>');
-            $upBtn.click(() => {
-                if (!hasValidUser) {
-                    alert('Please log in first.');
-                    return;
-                }
-                api.upvotePerk(p.id, currentUser.id)
-                    .then(updated => {
-                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
-                        console.log('Upvote event published to Kafka (toggle logic applied).');
-                    })
-                    .catch(err => {
-                        console.error('Error upvoting perk:', err);
-                        alert('Failed to upvote perk.');
-                    });
-            });
-
-            // Downvote button
-            const $downBtn = $('<button type="button">👎 Downvote</button>');
-            $downBtn.click(() => {
-                if (!hasValidUser) {
-                    alert('Please log in first.');
-                    return;
-                }
-                api.downvotePerk(p.id, currentUser.id)
-                    .then(updated => {
-                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
-                        console.log('Downvote event published to Kafka (toggle logic applied).');
-                    })
-                    .catch(err => {
-                        console.error('Error downvoting perk:', err);
-                        alert('Failed to downvote perk.');
-                    });
-            });
-
-            $li.append(' ');
-            $li.append($upBtn);
-            $li.append(' ');
-            $li.append($downBtn);
-
-            $list.append($li);
-        });
+        perksArray.forEach(perk => $grid.append(createPerkCard(perk, currentUser, { context: 'owned' })));
     },
 
     /**
@@ -84,97 +50,14 @@ const ui = {
      * currentUser: { id, email, perks? } or undefined
      */
     renderAllPerks: (perks, currentUser) => {
-        const $list = $('#allPerks').empty();
+        const $grid = $('#allPerks').empty();
         if (!perks || !perks.length) {
-            return $list.append('<li>No perks available.</li>');
+            return $grid.append('<p class="empty-state">No perks have been published yet.</p>');
         }
-
-        const hasValidUser = currentUser && typeof currentUser === 'object' && currentUser.id;
-
-        perks.forEach(p => {
-            const $li = $('<li>');
-
-            const postedBy = p.postedByEmail || 'Unknown user';
-            const activeStatus = p.active ? '✓ Active' : '✗ Inactive';
-
-            $li.append(`${p.description} - ${p.product} - ${p.membership} `);
-            $li.append(`<small>(by ${postedBy})</small> `);
-            $li.append(`<em>[Net: ${p.netScore}, ${activeStatus}]</em> `);
-
-            const $count = $(`<span>(↑${p.upvotes} ↓${p.downvotes})</span>`);
-            $li.append($count);
-
-            // Upvote button
-            const $upBtn = $('<button type="button">👍</button>');
-            $upBtn.click(() => {
-                if (!hasValidUser) {
-                    alert('Please log in first.');
-                    return;
-                }
-                api.upvotePerk(p.id, currentUser.id)
-                    .then(updated => {
-                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
-                        console.log('✓ PerkUpvotedEvent published to Kafka (toggle logic applied).');
-                    })
-                    .catch(err => {
-                        console.error('Error upvoting perk:', err);
-                        alert('Failed to upvote perk.');
-                    });
-            });
-            $li.append($upBtn);
-
-            // Downvote button
-            const $downBtn = $('<button type="button">👎</button>');
-            $downBtn.click(() => {
-                if (!hasValidUser) {
-                    alert('Please log in first.');
-                    return;
-                }
-                api.downvotePerk(p.id, currentUser.id)
-                    .then(updated => {
-                        $count.text(`(↑${updated.upvotes} ↓${updated.downvotes})`);
-                        console.log('✓ PerkDownvotedEvent published to Kafka (toggle logic applied).');
-                    })
-                    .catch(err => {
-                        console.error('Error downvoting perk:', err);
-                        alert('Failed to downvote perk.');
-                    });
-            });
-            $li.append($downBtn);
-
-            // Only show the "Add Perk" button if:
-            // - we have a currentUser
-            // - and the user does NOT already own this perk
-            const userPerks = (currentUser && Array.isArray(currentUser.perks))
-                ? currentUser.perks
-                : [];
-
-            if (hasValidUser && !userPerks.includes(p.id)) {
-                const $addBtn = $('<button type="button">Add Perk</button>');
-                $addBtn.click(() => {
-                    api.addPerkToUser(currentUser.id, p.id)
-                        .then(() => {
-                            alert('Perk added to your profile!');
-                            // Refresh the current user's perks and re-render
-                            api.getMatchingPerks(currentUser.id).then(perksForUser => {
-                                ui.renderPerks(perksForUser, currentUser);
-                                currentUser.perks = perksForUser.map(perk => perk.id);
-                                api.getAllPerks().then(allPerks => ui.renderAllPerks(allPerks, currentUser));
-                            });
-                        })
-                        .catch(err => {
-                            console.error('Error adding perk:', err);
-                            alert('Failed to add perk: ' + (err.responseText || err));
-                        });
-                });
-                $li.append($addBtn);
-            }
-
-            $list.append($li);
-        });
+        perks.forEach(perk => $grid.append(createPerkCard(perk, currentUser, { context: 'all' })));
     },
 
-    renderProfile: (memberships) => {
+    renderProfile(memberships) {
         const $list = $('#userProfile').empty();
         if (!memberships || !memberships.length) {
             return $list.append('<li>No memberships yet.</li>');
@@ -182,7 +65,7 @@ const ui = {
         memberships.forEach(m => $list.append(`<li>${m}</li>`));
     },
 
-    updateMembershipOptions: (memberships) => {
+    updateMembershipOptions(memberships) {
         const $select = $('#perkMembership')
             .empty()
             .append('<option value="">-- Select Membership --</option>');
@@ -208,3 +91,147 @@ const ui = {
         $('#currentUserEmail').text(email || '');
     }
 };
+
+// Create a perk card element
+function createPerkCard(perk, currentUser, { context } = {}) {
+    const $card = $('<article class="perk-card">');
+    const hasValidUser = currentUser && currentUser.id;
+    const userPerks = hasValidUser && Array.isArray(currentUser.perks) ? currentUser.perks : [];
+
+    $card.append(`<span class="badge">${perk.membership}</span>`);
+    $card.append(`<h3>${perk.description}</h3>`);
+
+    const $meta = $('<div class="perk-meta">');
+    $meta.append(`<span>${perk.product}</span>`);
+    $meta.append(`<span class="${perk.active ? 'positive' : 'negative'}">${perk.active ? 'Active' : 'Inactive'}</span>`);
+    $card.append($meta);
+
+    const postedBy = perk.postedByEmail || 'Unknown member';
+    $card.append(`<p class="muted small">by ${postedBy}</p>`);
+
+    if (perk.startDate || perk.endDate) {
+        const windowText = formatDateWindow(perk.startDate, perk.endDate);
+        if (windowText) {
+            $card.append(`<p class="muted small">${windowText}</p>`);
+        }
+    }
+
+    const $voteRow = $('<div class="vote-row">');
+    const $score = $(`<strong>Net ${perk.netScore ?? 0}</strong>`);
+    const $counts = $(`<span class="muted">↑${perk.upvotes} ↓${perk.downvotes}</span>`);
+    $voteRow.append($score);
+
+    const $controls = $('<div class="vote-controls">');
+    const $upBtn = $('<button type="button" class="vote-btn positive" aria-label="Upvote perk">👍</button>');
+    const $downBtn = $('<button type="button" class="vote-btn negative" aria-label="Downvote perk">👎</button>');
+
+    $upBtn.click(() => {
+        if (!hasValidUser) {
+            ui.showToast('Please log in first.', 'error');
+            return;
+        }
+        api.upvotePerk(perk.id, currentUser.id)
+            .then(updated => updateVoteDisplay(updated, $counts, $score))
+            .catch(() => ui.showToast('Failed to upvote perk.', 'error'));
+    });
+
+    $downBtn.click(() => {
+        if (!hasValidUser) {
+            ui.showToast('Please log in first.', 'error');
+            return;
+        }
+        api.downvotePerk(perk.id, currentUser.id)
+            .then(updated => updateVoteDisplay(updated, $counts, $score))
+            .catch(() => ui.showToast('Failed to downvote perk.', 'error'));
+    });
+
+    $controls.append($upBtn, $downBtn);
+    $voteRow.append($counts, $controls);
+    $card.append($voteRow);
+
+    const $shareRow = $('<div class="perk-share">');
+    const $shareBtn = $('<button type="button" class="share-btn">Share Perk</button>');
+    $shareBtn.click(() => sharePerk(perk));
+    $shareRow.append($shareBtn);
+
+    const shouldAllowAdd = hasValidUser && context === 'all' && !userPerks.includes(perk.id);
+    if (shouldAllowAdd) {
+        const $addBtn = $('<button type="button" class="primary share-btn">Add to My Perks</button>');
+        $addBtn.click(() => {
+            api.addPerkToUser(currentUser.id, perk.id)
+                .then(() => {
+                    ui.showToast('Perk added to your profile!', 'success');
+                    api.getMatchingPerks(currentUser.id).then(perkBuckets => {
+                        currentUser.perkBuckets = perkBuckets;
+                        currentUser.perks = (perkBuckets['Your Perks'] || []).map(p => p.id);
+                        ui.renderPerks(perkBuckets, currentUser);
+                        api.getAllPerks().then(allPerks => ui.renderAllPerks(allPerks, currentUser));
+                    });
+                })
+                .catch(err => ui.showToast('Failed to add perk: ' + (err.responseText || 'Unknown error'), 'error'));
+        });
+        $shareRow.append($addBtn);
+    }
+
+    $card.append($shareRow);
+    return $card;
+}
+
+// Share perk via Web Share API or copy to clipboard
+function sharePerk(perk) {
+    const shareText = `Check out this perk you can get with ${perk.membership}: ${perk.description} (${perk.product}). Found via PerkCollective!`;
+    if (navigator.share) {
+        navigator.share({ title: 'PerkCollective Perk', text: shareText })
+            .then(() => ui.showToast('Shared via native share sheet!', 'success'))
+            .catch(err => {
+                if (err && err.name === 'AbortError') {
+                    return;
+                }
+                copyToClipboard(shareText);
+            });
+        return;
+    }
+    copyToClipboard(shareText);
+}
+
+// Copy text to clipboard with fallback
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+            .then(() => ui.showToast('Perk copied to clipboard!', 'success'))
+            .catch(() => fallbackCopy(text));
+        return;
+    }
+    fallbackCopy(text);
+}
+
+// Fallback method to copy text using a temporary textarea
+function fallbackCopy(text) {
+    const $temp = $('<textarea readonly class="visually-hidden">').val(text).appendTo('body');
+    $temp[0].select();
+    document.execCommand('copy');
+    $temp.remove();
+    ui.showToast('Perk copied to clipboard!', 'success');
+}
+
+// Update vote counts and score display
+function updateVoteDisplay(updated, $counts, $score) {
+    if (!updated) return;
+    const upvotes = updated.upvotes ?? 0;
+    const downvotes = updated.downvotes ?? 0;
+    const net = updated.netScore ?? (upvotes - downvotes);
+    $counts.text(`↑${upvotes} ↓${downvotes}`);
+    $score.text(`Net ${net}`);
+}
+
+// Format start and end dates into a readable string
+function formatDateWindow(start, end) {
+    if (!start && !end) return '';
+    if (start && end) {
+        return `Valid ${start} – ${end}`;
+    }
+    if (start) {
+        return `Starts ${start}`;
+    }
+    return `Ends ${end}`;
+}

@@ -3,6 +3,8 @@
 ## 5-Minute Setup
 
 ### Step 1: Start Kafka (1 min)
+- Unix:
+
 ```bash
 # Using Docker Compose (recommended)
 docker-compose up -d
@@ -10,6 +12,14 @@ docker-compose up -d
 # Wait for Kafka to be ready
 docker-compose logs -f kafka | grep "started"
 ```
+- Windows:
+```bash
+# Using Docker Compose (recommended)
+docker-compose up -d
+# wait for Kafka to be ready
+ docker-compose logs -f kafka | Select-String "started"
+```
+
 
 ### Step 2: Start Application (1 min)
 ```bash

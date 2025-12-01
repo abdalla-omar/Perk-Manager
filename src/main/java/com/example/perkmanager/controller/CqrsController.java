@@ -2,6 +2,7 @@ package com.example.perkmanager.controller;
 
 import com.example.perkmanager.command.*;
 import com.example.perkmanager.dto.PerkReadModel;
+import com.example.perkmanager.enumerations.ProductType;
 import com.example.perkmanager.dto.UserProfileReadModel;
 import com.example.perkmanager.enumerations.MembershipType;
 import com.example.perkmanager.model.Perk;
@@ -202,6 +203,24 @@ public class CqrsController {
     }
 
     /**
+     * Query: Get Perks by Product Type
+     * GET /api/cqrs/perks/by-product/{product}
+     */
+    @GetMapping("/perks/by-product/{product}")
+    public ResponseEntity<?> getPerksByProduct(@PathVariable String product) {
+        try {
+            log.info("Received GetPerksByProductQuery for: {}", product);
+            ProductType productType = ProductType.valueOf(product.toUpperCase());
+            GetPerksByProductQuery query = new GetPerksByProductQuery(productType);
+            List<PerkReadModel> perks = perkQueryHandler.handle(query);
+            return ResponseEntity.ok(perks);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body("Invalid product type: " + product);
+        }
+    }
+
+    /**
      * Query: Get Perks Matching User Profile (Personalized)
      * GET /api/cqrs/users/{userId}/matching-perks
      */
@@ -210,25 +229,8 @@ public class CqrsController {
         try {
             log.info("Received GetPerksMatchingProfileQuery for user: {}", userId);
             GetPerksMatchingProfileQuery query = new GetPerksMatchingProfileQuery(userId);
-
-            // Retrieve the map with Set values
-            Map<String, Set<PerkReadModel>> categorizedPerksSet = perkQueryHandler.handle(query);
-
-            // Convert Set values to List values
-            Map<String, List<PerkReadModel>> categorizedPerks = categorizedPerksSet.entrySet()
-                    .stream()
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            entry -> List.copyOf(entry.getValue())
-                    ));
-
-            // Flatten the map into a single list
-            List<PerkReadModel> perks = categorizedPerks.values()
-                    .stream()
-                    .flatMap(List::stream)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(perks);
+            Map<String, Set<PerkReadModel>> categorizedPerks = perkQueryHandler.handle(query);
+            return ResponseEntity.ok(categorizedPerks);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

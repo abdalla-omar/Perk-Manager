@@ -2,6 +2,7 @@ package com.example.perkmanager.model;
 
 import com.example.perkmanager.enumerations.MembershipType;
 import com.example.perkmanager.enumerations.ProductType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ public class Perk {
     private LocalDate endDate;
 
     @ManyToOne
+    @JsonIgnore
     private AppUser postedBy;
 
     protected Perk() {} // JPA requires this
