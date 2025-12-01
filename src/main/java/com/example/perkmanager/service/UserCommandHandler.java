@@ -146,7 +146,14 @@ public class UserCommandHandler {
                 .orElseThrow(() -> new IllegalArgumentException("Perk not found: " + command.getPerkId()));
 
         Profile profile = user.getProfile();
-        if (profile == null || !profile.getMemberships().contains(perk.getMembership().toString())) {
+        if (profile == null) {
+            throw new IllegalArgumentException("User has no profile: " + command.getUserId());
+        }
+
+        String requiredMembership = perk.getMembership().name();
+        if (!profile.getMemberships().contains(requiredMembership)) {
+            log.warn("User {} does not have required membership {}. User has: {}",
+                    command.getUserId(), requiredMembership, profile.getMemberships());
             throw new IllegalArgumentException("User does not have required membership: " + perk.getMembership());
         }
 

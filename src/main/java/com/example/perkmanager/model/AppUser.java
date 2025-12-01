@@ -28,6 +28,7 @@ public class AppUser {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "perk_id")
     )
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Perk> perks = new ArrayList<>();
 
     public AppUser() {} // JPA requires this

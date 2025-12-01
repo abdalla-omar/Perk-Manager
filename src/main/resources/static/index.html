@@ -2,123 +2,180 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Perk Manager</title>
-
+    <title>PerkCollective</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="messageBox" class="hidden"></div>
+<div id="messageBox" class="toast hidden"></div>
 
-<!-- Change Password Modal -->
-<div id="changePasswordModal" class="modal hidden">
+<div id="changePasswordModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-content">
         <h2>Change Password</h2>
         <form id="changePasswordForm">
-            <label for="currentPassword">Current Password:</label>
-            <input type="password" id="currentPassword" required autocomplete="current-password"><br>
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" required autocomplete="current-password">
 
-            <label for="newPassword">New Password:</label>
-            <input type="password" id="newPassword" required autocomplete="new-password"><br>
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" required autocomplete="new-password">
 
-            <label for="confirmPassword">Confirm New Password:</label>
-            <input type="password" id="confirmPassword" required autocomplete="new-password"><br>
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword" required autocomplete="new-password">
 
             <div class="modal-buttons">
-                <button type="submit">Submit</button>
-                <button type="button" id="cancelChangePassword">Cancel</button>
+                <button type="submit" class="primary">Submit</button>
+                <button type="button" id="cancelChangePassword" class="ghost">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
-<h1>Perk Manager</h1>
+<header id="publicSection" class="hero">
+    <div class="hero-content">
+        <p class="eyebrow">PerkCollective</p>
+        <h1>Discover, rank, and share membership perks.</h1>
+        <p>Track perks tied to every membership you have, see what perks other members have, and up/downvote to rate perks.</p>
+    </div>
+    <div class="hero-grid">
+        <article class="card auth-card">
+            <h2>Access PerkCollective</h2>
+            <form id="authForm" autocomplete="off">
+                <label for="authEmail">Email</label>
+                <input type="email" id="authEmail" required autocomplete="off">
 
-<!-- Login Form -->
-<section id="publicSection">
-    <section id="authSection">
-        <h2>Login or Sign Up</h2>
-        <form id="authForm" autocomplete="off">
-            <label for="authEmail">Email:</label>
-            <input type="email" id="authEmail" required autocomplete="off"><br>
+                <label for="authPassword">Password</label>
+                <input type="password" id="authPassword" required autocomplete="new-password">
 
-            <label for="authPassword">Password:</label>
-            <input type="password" id="authPassword" required autocomplete="new-password"><br>
-
-            <div>
-                <button type="button" id="loginButton">Login</button>
-                <button type="button" id="signupButton">Sign Up</button>
+                <div class="button-row">
+                    <button type="button" id="loginButton" class="primary">Login</button>
+                    <button type="button" id="signupButton" class="secondary">Sign Up</button>
+                </div>
+            </form>
+        </article>
+        <article class="card users-card">
+            <div class="card-heading">
+                <h3>Community Members</h3>
+                <p>See users who are already sharing perks.</p>
             </div>
-        </form>
-    </section>
-    <section id="existingUserSection">
-        <h2>Existing Users</h2>
-        <ul id="userList"></ul>
-    </section>
-</section>
+            <ul id="userList" class="pill-list"></ul>
+        </article>
+    </div>
+</header>
 
-<section id="appSection" class="hidden">
-    <h2>Your Profile</h2>
-    <header id="logoutBar" class="hidden">
-        Logged in as <span id="currentUserEmail"></span>
-        <button id="changePasswordButton" type="button">Change Password</button>
-        <button id="logoutButton" type="button">Logout</button>
+<main id="appSection" class="dashboard hidden" aria-live="polite">
+    <header id="logoutBar" class="toolbar hidden">
+        <div>
+            <p class="eyebrow">Signed in</p>
+            <strong id="currentUserEmail"></strong>
+        </div>
+        <div class="toolbar-actions">
+            <button id="changePasswordButton" type="button" class="ghost">Change Password</button>
+            <button id="logoutButton" type="button" class="secondary">Logout</button>
+        </div>
     </header>
-    <h3>Your Memberships</h3>
-    <ul id="userProfile"></ul>
+    <div class="dashboard-grid">
+        <aside class="column profile-column">
+            <article class="card">
+                <div class="card-heading">
+                    <h2>Your Memberships</h2>
+                    <p>Drives perk matching</p>
+                </div>
+                <div id="userProfile" class="chip-list"></div>
+            </article>
 
-    <h2>Your Perks</h2>
-    <ul id="userPerks"></ul>
+            <article class="card">
+                <h2>Add Membership</h2>
+                <form id="addMembershipForm" autocomplete="off">
+                    <label for="membershipSelect">Membership</label>
+                    <select id="membershipSelect" required>
+                        <option value="">-- Select Membership --</option>
+                        <option value="CAA">CAA</option>
+                        <option value="VISA">VISA</option>
+                        <option value="MASTERCARD">MASTERCARD</option>
+                        <option value="AMEX">AMEX</option>
+                        <option value="AIRMILES">AIRMILES</option>
+                    </select>
+                    <button type="submit" class="primary full-width">Add Membership</button>
+                </form>
+            </article>
 
-    <h2>All Perks</h2>
-    <button id="showTopPerks" type="button">🔥 Show Top Perks by Votes (CQRS Query)</button>
-    <ul id="allPerks"></ul>
+            <article class="card">
+                <h2>Add New Perk</h2>
+                <form id="createPerkForm" autocomplete="off">
+                    <label for="perkDescription">Description</label>
+                    <textarea id="perkDescription" rows="3" required></textarea>
 
-    <!-- Add New Perk Form -->
-    <h2>Add New Perk</h2>
-    <form id="createPerkForm" autocomplete="off">
-        <label for="perkDescription">Description:</label><br>
-        <textarea id="perkDescription" rows="3" cols="40" autocomplete="off" required></textarea><br>
+                    <label for="perkMembership">Membership</label>
+                    <select id="perkMembership" required>
+                        <option value="">-- Select Membership --</option>
+                    </select>
 
-        <label for="perkMembership">Membership:</label>
-        <select id="perkMembership" required>
-            <option value="">-- Select Membership --</option>
-        </select><br>
+                    <label for="perkProduct">Product</label>
+                    <select id="perkProduct" required>
+                        <option value="">-- Select Product --</option>
+                        <option value="MOVIES">Movies</option>
+                        <option value="HOTELS">Hotels</option>
+                        <option value="FLIGHTS">Flights</option>
+                        <option value="CARS">Cars</option>
+                        <option value="DINING">Dining</option>
+                    </select>
 
-        <label for="perkProduct">Product:</label>
-        <select id="perkProduct" required>
-            <option value="">-- Select Product --</option>
-            <option value="MOVIES">Movies</option>
-            <option value="HOTELS">Hotels</option>
-            <option value="FLIGHTS">Flights</option>
-            <option value="CARS">Cars</option>
-            <option value="DINING">Dining</option>
-        </select><br>
+                    <label for="perkStartDate">Start Date</label>
+                    <input type="date" id="perkStartDate" required>
 
-        <label for="perkStartDate">Start Date:</label>
-        <input type="date" id="perkStartDate" required><br>
+                    <label for="perkEndDate">End Date</label>
+                    <input type="date" id="perkEndDate" required>
 
-        <label for="perkEndDate">End Date:</label>
-        <input type="date" id="perkEndDate" required><br>
+                    <button type="submit" class="secondary full-width">Publish Perk</button>
+                </form>
+            </article>
+        </aside>
 
-        <button type="submit">Add Perk</button>
-    </form>
+        <section class="column perks-column">
+            <article class="card">
+                <div class="card-heading">
+                    <h2>Your Perks</h2>
+                    <p>Perks in your profile</p>
+                </div>
+                <div id="userPerks" class="perk-grid"></div>
+            </article>
 
-    <h2>Add Membership to Profile</h2>
-    <form id="addMembershipForm" autocomplete="off">
-        <label for="membershipSelect">Membership:</label>
-        <select id="membershipSelect" required>
-            <option value="">-- Select Membership --</option>
-            <option value="CAA">CAA</option>
-            <option value="VISA">VISA</option>
-            <option value="MASTERCARD">MASTERCARD</option>
-            <option value="AMEX">AMEX</option>
-            <option value="AIRMILES">AIRMILES</option>
-        </select><br>
+            <article class="card">
+                <div class="card-heading">
+                    <div>
+                        <h2>All Perks</h2>
+                        <p>Vote to refine perks</p>
+                    </div>
+                    <div class="filter-row">
+                        <select id="filterMembership">
+                            <option value="">All Memberships</option>
+                            <option value="CAA">CAA</option>
+                            <option value="VISA">VISA</option>
+                            <option value="MASTERCARD">MASTERCARD</option>
+                            <option value="AMEX">AMEX</option>
+                            <option value="AIRMILES">AIRMILES</option>
+                        </select>
+                        <select id="filterProduct">
+                            <option value="">All Products</option>
+                            <option value="MOVIES">Movies</option>
+                            <option value="HOTELS">Hotels</option>
+                            <option value="FLIGHTS">Flights</option>
+                            <option value="CARS">Cars</option>
+                            <option value="DINING">Dining</option>
+                        </select>
+                        <button id="showTopPerks" type="button" class="pill">🔥 Top Perks</button>
+                    </div>
+                </div>
+                <div id="allPerks" class="perk-grid"></div>
+            </article>
+        </section>
+    </div>
+</main>
 
-        <button type="submit">Add Membership</button>
-    </form>
-</section>
 <script src="api.js"></script>
 <script src="ui.js"></script>
 <script src="main.js"></script>

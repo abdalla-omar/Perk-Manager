@@ -93,6 +93,12 @@ public class AppController {
         return ResponseEntity.ok(user);
     }
 
+    // get all users
+    @GetMapping("/users")
+    public ResponseEntity<List<AppUser>> getUsers() {
+        return ResponseEntity.ok((List<AppUser>) userRepo.findAll());
+    }
+
     // ---------------------------------------------------------------------
     // Perks
     // ---------------------------------------------------------------------

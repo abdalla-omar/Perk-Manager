@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -76,17 +76,55 @@ public class PerkQueryHandler {
      * Handle GetPerksMatchingProfileQuery
      * Returns perks that match user's memberships (personalized)
      */
-    public List<PerkReadModel> handle(GetPerksMatchingProfileQuery query) {
+    public Map<String, Set<PerkReadModel>> handle(GetPerksMatchingProfileQuery query) {
         log.info("Handling GetPerksMatchingProfileQuery for user: {}", query.getUserId());
 
-        // Load user
+        // Load user and profile
         AppUser user = userRepository.findById(query.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + query.getUserId()));
 
-        // Return the user's perks as PerkReadModels
-        return user.getPerks().stream()
+        if (user.getProfile() == null || user.getProfile().getMemberships().isEmpty()) {
+            log.warn("User {} has no memberships", query.getUserId());
+            return Map.of(); // Return empty map if no memberships
+        }
+
+        // Get all perks
+        Set<Perk> allPerks = StreamSupport.stream(perkRepository.findAll().spliterator(), false)
+                .collect(Collectors.toSet());
+
+        // Filter perks for "Your Perks" list:
+        // 1. Perks posted by the user
+        // 2. Perks added to the user's profile (user.getPerks())
+        Set<Perk> userOwnedPerks = new HashSet<>();
+        userOwnedPerks.addAll(perkRepository.findByPostedBy(user));
+        userOwnedPerks.addAll(user.getPerks());
+
+        Set<PerkReadModel> userPerks = userOwnedPerks.stream()
+                .map(PerkReadModel::fromEntity)
+                .collect(Collectors.toSet());
+
+        // Categorize perks by membership for "All Perks"
+        Map<String, Set<PerkReadModel>> categorizedPerks = new HashMap<>();
+        allPerks.stream()
+                .filter(perk -> !userOwnedPerks.contains(perk))
+                .forEach(perk -> {
+                    String membership = perk.getMembership().name();
+                    categorizedPerks
+                            .computeIfAbsent(membership, k -> new HashSet<>())
+                            .add(PerkReadModel.fromEntity(perk));
+                });
+
+        // Add "Your Perks" list to the map
+        categorizedPerks.put("Your Perks", userPerks);
+
+        return categorizedPerks;
+    }
+
+    public List<PerkReadModel> handle(GetPerksByProductQuery query) {
+        log.info("Handling GetPerksByProductQuery for product: {}", query.getProduct());
+        List<Perk> perks = perkRepository.findByProduct(query.getProduct());
+        return perks.stream()
                 .map(PerkReadModel::fromEntity)
                 .collect(Collectors.toList());
     }
-
 }
