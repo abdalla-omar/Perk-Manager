@@ -15,6 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * CQRS Controller
@@ -207,7 +210,24 @@ public class CqrsController {
         try {
             log.info("Received GetPerksMatchingProfileQuery for user: {}", userId);
             GetPerksMatchingProfileQuery query = new GetPerksMatchingProfileQuery(userId);
-            List<PerkReadModel> perks = perkQueryHandler.handle(query);
+
+            // Retrieve the map with Set values
+            Map<String, Set<PerkReadModel>> categorizedPerksSet = perkQueryHandler.handle(query);
+
+            // Convert Set values to List values
+            Map<String, List<PerkReadModel>> categorizedPerks = categorizedPerksSet.entrySet()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> List.copyOf(entry.getValue())
+                    ));
+
+            // Flatten the map into a single list
+            List<PerkReadModel> perks = categorizedPerks.values()
+                    .stream()
+                    .flatMap(List::stream)
+                    .collect(Collectors.toList());
+
             return ResponseEntity.ok(perks);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

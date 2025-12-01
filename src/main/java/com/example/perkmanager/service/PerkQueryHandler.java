@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -76,17 +76,40 @@ public class PerkQueryHandler {
      * Handle GetPerksMatchingProfileQuery
      * Returns perks that match user's memberships (personalized)
      */
-    public List<PerkReadModel> handle(GetPerksMatchingProfileQuery query) {
+    public Map<String, Set<PerkReadModel>> handle(GetPerksMatchingProfileQuery query) {
         log.info("Handling GetPerksMatchingProfileQuery for user: {}", query.getUserId());
 
-        // Load user
+        // Load user and profile
         AppUser user = userRepository.findById(query.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + query.getUserId()));
 
-        // Return the user's perks as PerkReadModels
-        return user.getPerks().stream()
-                .map(PerkReadModel::fromEntity)
-                .collect(Collectors.toList());
-    }
+        if (user.getProfile() == null || user.getProfile().getMemberships().isEmpty()) {
+            log.warn("User {} has no memberships", query.getUserId());
+            return Map.of(); // Return empty map if no memberships
+        }
 
+        // Get all perks
+        Set<Perk> allPerks = StreamSupport.stream(perkRepository.findAll().spliterator(), false)
+                .collect(Collectors.toSet());
+
+        // Filter perks for "Your Perks" list (perks posted by the user)
+        Set<PerkReadModel> userPerks = perkRepository.findByPostedBy(user)
+                .stream()
+                .map(PerkReadModel::fromEntity)
+                .collect(Collectors.toSet());
+
+        // Categorize perks by membership for "All Perks"
+        Map<String, Set<PerkReadModel>> categorizedPerks = new HashMap<>();
+        allPerks.forEach(perk -> {
+            String membership = perk.getMembership().name();
+            categorizedPerks
+                    .computeIfAbsent(membership, k -> new HashSet<>())
+                    .add(PerkReadModel.fromEntity(perk));
+        });
+
+        // Add "Your Perks" list to the map
+        categorizedPerks.put("Your Perks", userPerks);
+
+        return categorizedPerks;
+    }
 }
