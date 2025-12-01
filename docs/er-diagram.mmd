@@ -1,6 +1,9 @@
 erDiagram
     APP_USER ||--|| PROFILE : "has"
     APP_USER ||--o{ PERK : "posts"
+    APP_USER }o--o{ PERK : "saves"
+    APP_USER ||--o{ PERK_VOTE : "casts"
+    PERK ||--o{ PERK_VOTE : "receives"
     PROFILE ||--o{ PROFILE_MEMBERSHIP : "contains"
 
     APP_USER {
@@ -29,4 +32,16 @@ erDiagram
         DATE start_date
         DATE end_date
         BIGINT posted_by_id FK
+    }
+
+    USER_PERKS {
+        BIGINT user_id FK
+        BIGINT perk_id FK
+    }
+
+    PERK_VOTE {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT perk_id FK
+        VARCHAR vote_type
     }
